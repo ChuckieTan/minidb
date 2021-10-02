@@ -72,11 +72,12 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 
 # vscode ================================
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+# .vscode/*
+# !.vscode/settings.json
+# !.vscode/tasks.json
+# !.vscode/launch.json
+# !.vscode/extensions.json
+.vscode/
 
 # C++ ================================
  Prerequisites
