@@ -8,4 +8,4 @@ project(minidb)
 set(CMAKE_CXX_STANDARD 17)
 
 # 编译源码生成目标
-add_executable(minidb src/main.cpp)
+add_executable(minidb main.cpp src/repl/InputBuffer.cpp src/repl/InputBuffer.h)
