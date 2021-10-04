@@ -16,5 +16,5 @@ $ make -j
 ## Running
 just run minidb_release directly
 ```bash
-./minidb_release
+$ ./minidb_release
 ```
