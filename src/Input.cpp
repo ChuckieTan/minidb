@@ -12,7 +12,8 @@ Input::Input() {
 bool Input::readInputFromStream(std::istream &stream) {
     Strings::print_string(Strings::StringType::full_pragma);
     std::string line;
-    getline(stream, line);
+    std::getline(stream, line);
+    buffer.append(line);
     while (line.back() != ';') {
         if (typeid(stream) == typeid(std::cin)) {
             Strings::print_string(Strings::StringType::light_pragma);

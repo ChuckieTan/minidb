@@ -13,11 +13,13 @@ public:
     Token getNextToken();
 
 protected:
-    std::string                            sql;
-    int                                    pos;
-    static std::unordered_map<char, Token>        singleCharacterToken;
-    static std::unordered_map<std::string, Token> doubleCharacterToken;
+    int                                               pos;
+    std::string                                       sql;
+    static std::unordered_map<std::string, TokenType> symbolTokenType;
+    static std::unordered_map<std::string, TokenType> keywordTokenType;
 
+    void  toLowerCase(std::string &str);
+    Token getIdToken();
     Token getSymbolToken();
     Token getLiteralToken();
     Token getNumberToken();

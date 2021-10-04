@@ -2,23 +2,24 @@
 
 namespace minidb {
 enum class TokenType {
-    CHAR,             // char(n)
-    INT,              // int(n)
-    CREATE_TABLE,     // create table ...
-    INSERT_INTO,      // insert into ...
-    DELETE_FROM,      // delete from ...
-    DROP_TABLE,       // drop table ...
-    SELECT,           // select
-    FROM,             // from
-    WHERE,            // where
-    AND,              // and
-    OR,               // or
-    NOT,              // not
-    ID,               // id
+    CREATE,
+    TABLE,
+    INSERT,
+    INTO,
+    DELETE,
+    DROP,
+    SELECT,
+    FROM,
+    WHERE,
+    AND,
+    OR,
+    NOT,
+    ID,               // identifier
     COMMA,            // ,
+    STAR,             // *
     LBRACKET,         // (
     RBRACKET,         // )
-    EQUAL,            // ==
+    EQUAL,            // =
     NOT_EQUAL,        // '!=' <>
     LESS,             // <
     LESS_OR_EQUAL,    // <=
@@ -30,8 +31,7 @@ enum class TokenType {
     FLOAT,            // float number
     STRING,           // string.
     SEMICOLON,        // ;
-    VARIABLE,         // variable
-    ILLEGAL,           // illegal token
+    ILLEGAL,          // illegal token
     END,              // end of SQL
 };
 }
