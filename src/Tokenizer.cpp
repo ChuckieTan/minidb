@@ -27,10 +27,10 @@ Tokenizer::Tokenizer(const std::string &_sql)
 Token Tokenizer::getSymbolToken() {
     Token token;
     if (auto ch = sql.substr(pos, 2); symbolTokenType.count(ch)) {
-        token = Token(symbolTokenType[ ch ]);
+        token = Token(symbolTokenType[ ch ], ch);
         pos += 2;
     } else if (auto ch = sql.substr(pos, 1); symbolTokenType.count(ch)) {
-        token = Token(symbolTokenType[ ch ]);
+        token = Token(symbolTokenType[ ch ], ch);
         pos += 1;
     } else {
         if (sql[ pos ] == '\'') {
@@ -73,7 +73,7 @@ Token Tokenizer::getLiteralToken() {
     std::string word = sql.substr(pos, len);
     toLowerCase(word);
     if(keywordTokenType.count(word) != 0) {
-        token = Token(keywordTokenType[word]);
+        token = Token(keywordTokenType[word], word);
     } else {
         token = Token(TokenType::ID, word);
     }
