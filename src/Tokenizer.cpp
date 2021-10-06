@@ -93,7 +93,7 @@ Token Tokenizer::getLiteralToken() {
 }
 
 Token Tokenizer::getNumberToken() {
-    Token token(TokenType::INTEGER, 0);
+    Token token(TokenType::INTEGER, "0");
     int   len = 0, numOfDot = 0;
     while (std::isdigit(sql[ pos + len ]) || sql[ pos + len ] == '.') {
         if (sql[ pos + len ] == '.') {
@@ -102,9 +102,9 @@ Token Tokenizer::getNumberToken() {
         len++;
     }
     if (numOfDot == 0) {
-        token = Token(TokenType::INTEGER, std::stoi(sql.substr(pos, len)));
+        token = Token(TokenType::INTEGER, sql.substr(pos, len));
     } else if (numOfDot == 1) {
-        token = Token(TokenType::FLOAT, std::stod(sql.substr(pos, len)));
+        token = Token(TokenType::FLOAT, sql.substr(pos, len));
     } else {
         token = Token(TokenType::ILLEGAL, sql.substr(pos, len));
     }
