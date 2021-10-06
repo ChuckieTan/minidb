@@ -1,5 +1,5 @@
 #include "Input.h"
-#include "Strings.h"
+#include "MinidbStrings.h"
 #include "TokenType.h"
 #include "Tokenizer.h"
 #include <any>
@@ -7,7 +7,8 @@
 #include <string>
 
 int main(int argc, char *argv[]) {
-    minidb::Strings::print_string(minidb::Strings::StringType::info);
+    minidb::MinidbStrings::print_string(
+        minidb::MinidbStrings::StringType::info);
     auto input = minidb::Input();
     input.readInputFromStream(std::cin);
     minidb::Tokenizer tokenizer(input.buffer);

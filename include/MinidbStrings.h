@@ -4,13 +4,13 @@
 #include <vector>
 
 namespace minidb {
-class Strings {
+class MinidbStrings {
 public:
     enum class StringType { info, full_pragma, light_pragma };
     static void print_string(StringType stringType);
 
 private:
-    Strings() = default;
+    MinidbStrings() = default;
     static std::unordered_map<StringType, std::string> strings;
 };
 } // namespace minidb
