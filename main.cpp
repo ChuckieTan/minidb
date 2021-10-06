@@ -18,8 +18,7 @@ int main(int argc, char *argv[]) {
          token = tokenizer.getNextToken()) {
         std::cout << static_cast<std::underlying_type<minidb::TokenType>::type>(
                          token.tokenType)
-                  //   << " " << std::any_cast<std::string>(token.val)
-                  << "\n";
+                  << " " << token.val << "\n";
     }
     return 0;
 }

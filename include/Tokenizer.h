@@ -4,6 +4,8 @@
 #include <cctype>
 #include <string>
 #include <unordered_map>
+#include <vector>
+#include <map>
 
 namespace minidb {
 
@@ -17,9 +19,10 @@ protected:
     std::string                                       sql;
     static std::unordered_map<std::string, TokenType> symbolTokenType;
     static std::unordered_map<std::string, TokenType> keywordTokenType;
+    static std::multimap<char, std::string> keywordFirstLetter;
 
-    void  toLowerCase(std::string &str);
-    Token getIdToken();
+        void
+          toLowerCase(std::string &str);
     Token getSymbolToken();
     Token getLiteralToken();
     Token getNumberToken();

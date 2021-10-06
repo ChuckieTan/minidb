@@ -3,8 +3,10 @@
 #include "TokenType.h"
 #include <algorithm>
 #include <cctype>
+#include <map>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace minidb {
 
@@ -61,34 +63,21 @@ std::unordered_map<std::string, TokenType> Tokenizer::keywordTokenType = {
     { "or", TokenType::OR },         { "not", TokenType::NOT }
 };
 
-Token Tokenizer::getIdToken() {
-    int  len = 0;
-    char ch;
-    do {
-        len++;
-        ch = sql[ pos + len ];
-    } while (std::isalpha(ch) || ch == '_');
-    pos += len;
-    return Token(TokenType::ID, sql.substr(pos - len, len));
-}
-
 Token Tokenizer::getLiteralToken() {
-    Token       token(TokenType::ILLEGAL, "");
-    std::string tmp = sql.substr(pos, 6);
-    toLowerCase(tmp);
-    int flag = 0;
-    for (int i = 0; i <= tmp.size(); i++) {
-        if (keywordTokenType.count(tmp) == 1) {
-            flag  = 1;
-            token = Token(keywordTokenType[ tmp ]);
-            pos += tmp.size();
-            break;
-        }
-        tmp.pop_back();
+    Token token(TokenType::ILLEGAL, "");
+    int   len = 1;
+    while (std::isalpha(sql[ pos + len ]) || std::isdigit(sql[ pos + len ]) ||
+           sql[ pos + len ] == '_') {
+        len++;
     }
-    if (!flag) {
-        token = getIdToken();
+    std::string word = sql.substr(pos, len);
+    toLowerCase(word);
+    if(keywordTokenType.count(word) != 0) {
+        token = Token(keywordTokenType[word]);
+    } else {
+        token = Token(TokenType::ID, word);
     }
+    pos += len;
     return token;
 }
 
