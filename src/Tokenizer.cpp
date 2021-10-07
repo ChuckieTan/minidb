@@ -24,6 +24,20 @@ Tokenizer::Tokenizer(const std::string &_sql)
     , sql(_sql) {
 }
 
+Tokenizer::SavePoint Tokenizer::mark() {
+    SavePoint savePoint;
+    savePoint.pos = pos;
+    return savePoint;
+}
+
+void Tokenizer::reset(int _pos) {
+    pos = _pos;
+}
+
+void Tokenizer::reset(SavePoint savePoint) {
+    pos = savePoint.pos;
+}
+
 Token Tokenizer::getSymbolToken() {
     Token token;
     if (auto ch = sql.substr(pos, 2); symbolTokenType.count(ch)) {
@@ -72,10 +86,10 @@ Token Tokenizer::getLiteralToken() {
     }
     std::string word = sql.substr(pos, len);
     toLowerCase(word);
-    if(keywordTokenType.count(word) != 0) {
-        token = Token(keywordTokenType[word], word);
+    if (keywordTokenType.count(word) != 0) {
+        token = Token(keywordTokenType[ word ], word);
     } else {
-        token = Token(TokenType::ID, word);
+        token = Token(TokenType::IDENTIFIER, word);
     }
     pos += len;
     return token;
