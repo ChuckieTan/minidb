@@ -11,6 +11,7 @@ namespace {
         EXPECT_EQ(tokenizer.getNextToken().tokenType, TokenType::SELECT);
         EXPECT_EQ(tokenizer.getNextToken().tokenType, TokenType::STAR);
         EXPECT_EQ(tokenizer.getNextToken().tokenType, TokenType::FROM);
-        EXPECT_EQ(tokenizer.getNextToken(), Token(TokenType::ID, "student"));
+        EXPECT_EQ(tokenizer.getNextToken(),
+                  Token(TokenType::IDENTIFIER, "student"));
     }
 }

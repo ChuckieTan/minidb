@@ -14,7 +14,7 @@ enum class TokenType {
     AND,
     OR,
     NOT,
-    ID,               // identifier
+    IDENTIFIER,       // identifier
     COMMA,            // ,
     STAR,             // *
     LBRACKET,         // (
