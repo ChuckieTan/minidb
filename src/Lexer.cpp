@@ -19,6 +19,11 @@ std::unordered_map<std::string, TokenType> Lexer::symbolTokenType = {
     { "<>", TokenType::NOT_EQUAL }, { ">=", TokenType::GREATER_OR_EQUAL }
 };
 
+Lexer::Lexer(std::string &&_sql)
+    : pos(0)
+    , sql(_sql) {
+}
+
 Lexer::Lexer(const std::string &_sql)
     : pos(0)
     , sql(_sql) {

@@ -14,6 +14,7 @@ public:
     struct SavePoint {
         int pos;
     };
+    Lexer(std::string &&sql);
     Lexer(const std::string &_sql);
     Token getNextToken();
 
