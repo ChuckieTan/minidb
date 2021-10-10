@@ -7,9 +7,7 @@ namespace {
 TEST(MatchType, DefaultConstructor) {
     using namespace minidb;
     Parser parser;
-    Parser::MatchType matchType("123");
-    parser.chain({"123"});
-    EXPECT_EQ(matchType.isString(), true);
-    EXPECT_EQ(matchType.isFunc(), false);
+    EXPECT_EQ(parser.chain("123"), false);
+    EXPECT_EQ(parser.chain("123", []() { return true; }), false);
 }
 } // namespace
