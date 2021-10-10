@@ -9,12 +9,12 @@
 
 namespace minidb {
 
-class Tokenizer {
+class Lexer {
 public:
     struct SavePoint {
         int pos;
     };
-    Tokenizer(const std::string &_sql);
+    Lexer(const std::string &_sql);
     Token getNextToken();
 
     SavePoint mark();

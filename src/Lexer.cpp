@@ -1,4 +1,4 @@
-#include "Tokenizer.h"
+#include "Lexer.h"
 #include "Token.h"
 #include "TokenType.h"
 #include <algorithm>
@@ -10,7 +10,7 @@
 
 namespace minidb {
 
-std::unordered_map<std::string, TokenType> Tokenizer::symbolTokenType = {
+std::unordered_map<std::string, TokenType> Lexer::symbolTokenType = {
     { ",", TokenType::COMMA },      { "*", TokenType::STAR },
     { "(", TokenType::LBRACKET },   { ")", TokenType::RBRACKET },
     { "+", TokenType::PLUS },       { "-", TokenType::MINUS },
@@ -19,26 +19,26 @@ std::unordered_map<std::string, TokenType> Tokenizer::symbolTokenType = {
     { "<>", TokenType::NOT_EQUAL }, { ">=", TokenType::GREATER_OR_EQUAL }
 };
 
-Tokenizer::Tokenizer(const std::string &_sql)
+Lexer::Lexer(const std::string &_sql)
     : pos(0)
     , sql(_sql) {
 }
 
-Tokenizer::SavePoint Tokenizer::mark() {
+Lexer::SavePoint Lexer::mark() {
     SavePoint savePoint;
     savePoint.pos = pos;
     return savePoint;
 }
 
-void Tokenizer::reset(int _pos) {
+void Lexer::reset(int _pos) {
     pos = _pos;
 }
 
-void Tokenizer::reset(SavePoint savePoint) {
+void Lexer::reset(SavePoint savePoint) {
     pos = savePoint.pos;
 }
 
-Token Tokenizer::getSymbolToken() {
+Token Lexer::getSymbolToken() {
     Token token;
     if (auto ch = sql.substr(pos, 2); symbolTokenType.count(ch)) {
         token = Token(symbolTokenType[ ch ], ch);
@@ -64,11 +64,11 @@ Token Tokenizer::getSymbolToken() {
     return token;
 }
 
-void Tokenizer::toLowerCase(std::string &str) {
+void Lexer::toLowerCase(std::string &str) {
     std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 }
 
-std::unordered_map<std::string, TokenType> Tokenizer::keywordTokenType = {
+std::unordered_map<std::string, TokenType> Lexer::keywordTokenType = {
     { "create", TokenType::CREATE }, { "table", TokenType::TABLE },
     { "insert", TokenType::INSERT }, { "into", TokenType::INTO },
     { "delete", TokenType::DELETE }, { "drop", TokenType::DROP },
@@ -77,7 +77,7 @@ std::unordered_map<std::string, TokenType> Tokenizer::keywordTokenType = {
     { "or", TokenType::OR },         { "not", TokenType::NOT }
 };
 
-Token Tokenizer::getLiteralToken() {
+Token Lexer::getLiteralToken() {
     Token token(TokenType::ILLEGAL, "");
     int   len = 1;
     while (std::isalpha(sql[ pos + len ]) || std::isdigit(sql[ pos + len ]) ||
@@ -95,7 +95,7 @@ Token Tokenizer::getLiteralToken() {
     return token;
 }
 
-Token Tokenizer::getNumberToken() {
+Token Lexer::getNumberToken() {
     Token token(TokenType::INTEGER, "0");
     int   len = 0, numOfDot = 0;
     while (std::isdigit(sql[ pos + len ]) || sql[ pos + len ] == '.') {
@@ -115,7 +115,7 @@ Token Tokenizer::getNumberToken() {
     return token;
 }
 
-Token Tokenizer::getNextToken() {
+Token Lexer::getNextToken() {
     if (pos >= sql.size()) {
         return Token(TokenType::END, "");
     }
