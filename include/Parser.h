@@ -1,36 +1,52 @@
 #pragma once
 
 #include "Lexer.h"
+#include "TokenType.h"
 #include <functional>
 #include <string>
+#include <variant>
 
 namespace minidb {
 
 class Parser {
 public:
-    Lexer lexer;
-    // chain可变参数模板的递归末尾
-    template <typename MatchCondition>
-    bool chain(const MatchCondition &condition);
+    Parser(std::string &&_sql);
+    Parser(const std::string &_sql);
+    class MatchType {
+    public:
+        MatchType() = default;
+        MatchType(const std::string &str);
+        MatchType(const TokenType tokenType);
+        MatchType(const std::function<bool()> &func);
 
-    // 可变参数模板，实现 chain(arg1, arg2, ...)
-    template <typename FirstCondition, typename... RestCondition>
-    bool chain(const FirstCondition &firstCondition,
-               const RestCondition &... restCondition);
-    
-    bool match(const std::string &str);
-    bool match(const std::function<bool()> &func);
+        bool isString();
+        bool isFunc();
+        bool isToken();
+
+        std::string           getString();
+        TokenType             getToken();
+        std::function<bool()> getFunc();
+
+    private:
+        enum class DataType { STRING, TOKEN, FUNC, INVALID };
+        DataType dataType = DataType::INVALID;
+        std::variant<std::string, TokenType, std::function<bool()>> _data;
+    };
+    bool match(MatchType &condition);
+    bool selectStatement();
+
+protected:
+    Lexer lexer;
+
+    bool selectList();
+    bool table();
+    bool whereStatement();
+    bool word();
+    bool functional();
+    bool field();
+    bool chain(std::initializer_list<MatchType> args);
+    bool optional(std::initializer_list<MatchType> args);
+    bool tree(std::initializer_list<MatchType> args);
 };
 
-// 可变参数模板的实现
-template <typename MatchCondition>
-bool Parser::chain(const MatchCondition &condition) {
-    return match(condition);
-}
-
-template <typename FirstCondition, typename... RestCondition>
-bool Parser::chain(const FirstCondition &firstCondition,
-                   const RestCondition &... restCondition) {
-    return match(firstCondition) && chain(restCondition...);
-}
 } // namespace minidb
