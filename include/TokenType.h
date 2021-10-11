@@ -19,6 +19,9 @@ enum class TokenType {
     STAR,             // *
     LBRACKET,         // (
     RBRACKET,         // )
+    IN,               // in
+    IS,               // is
+    NULL_,             // null
     EQUAL,            // =
     NOT_EQUAL,        // '!=' <>
     LESS,             // <

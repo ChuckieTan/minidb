@@ -79,7 +79,9 @@ std::unordered_map<std::string, TokenType> Lexer::keywordTokenType = {
     { "delete", TokenType::DELETE }, { "drop", TokenType::DROP },
     { "select", TokenType::SELECT }, { "from", TokenType::FROM },
     { "where", TokenType::WHERE },   { "and", TokenType::AND },
-    { "or", TokenType::OR },         { "not", TokenType::NOT }
+    { "or", TokenType::OR },         { "not", TokenType::NOT },
+    { "in", TokenType::IN },         { "is", TokenType::IS },
+    { "null", TokenType::NULL_ }
 };
 
 Token Lexer::getLiteralToken() {
