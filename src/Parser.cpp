@@ -74,6 +74,7 @@ bool Parser::match(MatchType &condition) {
 }
 
 bool Parser::chain(std::initializer_list<MatchType> args) {
+    spdlog::info(__PRETTY_FUNCTION__);
     auto savePoint = lexer.mark();
     for (auto condition : args) {
         if (!match(condition)) {
@@ -124,6 +125,15 @@ bool Parser::functional() {
 bool Parser::field() {
     bool res = tree({ FUNC(functional), FUNC(identifier), TokenType::STAR });
     return res;
+}
+
+bool Parser::optional(std::initializer_list<MatchType> args) {
+    auto savePoint = lexer.mark();
+    if (chain(args)) {
+        savePoint = lexer.mark();
+    }
+    lexer.reset(savePoint);
+    return true;
 }
 
 bool Parser::many(std::initializer_list<MatchType> args) {
