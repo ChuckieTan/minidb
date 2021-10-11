@@ -15,7 +15,7 @@
 
 int main(int argc, char *argv[]) {
     #ifdef DEBUG
-    std::cout << "debug mode" << std::endl;
+    std::cout << "Debug Mode" << std::endl;
     #endif
     minidb::MinidbStrings::print_string(
         minidb::MinidbStrings::StringType::info);

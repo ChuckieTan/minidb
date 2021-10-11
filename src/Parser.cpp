@@ -84,7 +84,7 @@ bool Parser::selectStatement() {
 }
 
 bool Parser::selectList() {
-    return field() && optional({ TokenType::COMMA, FUNC(word) });
+    return field() && optional({ TokenType::COMMA, FUNC(field) });
 }
 
 bool Parser::table() {
@@ -92,7 +92,7 @@ bool Parser::table() {
 }
 
 bool Parser::whereStatement() {
-    return true;
+    return false;
 }
 
 bool Parser::word() {
@@ -106,7 +106,12 @@ bool Parser::field() {
 }
 
 bool Parser::optional(std::initializer_list<MatchType> args) {
-    return tree(args) || true;
+    auto savePoint = lexer.mark();
+    while(chain(args)) {
+        savePoint = lexer.mark();
+    }
+    lexer.reset(savePoint);
+    return true;
 }
 
 bool Parser::tree(std::initializer_list<MatchType> args) {
