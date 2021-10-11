@@ -7,6 +7,8 @@
 #include <string>
 #include <variant>
 
+#include <spdlog/spdlog.h>
+
 #define FUNC(fun) std::function([ & ]() -> bool { return fun(); })
 
 #ifdef DEBUG
@@ -87,19 +89,16 @@ bool Parser::selectStatement() {
                        FUNC(table) }) &&
                many({ FUNC(whereStatement) }) &&
                chain({ TokenType::SEMICOLON });
-    std::cout << "selectStatement\t" << (res ? "true" : "false") << "\n";
     return res;
 }
 
 bool Parser::selectList() {
     bool res = field() && many({ TokenType::COMMA, FUNC(field) });
-    std::cout << "selectList\t" << (res ? "true" : "false") << "\n";
     return res;
 }
 
 bool Parser::table() {
     bool res = lexer.getNextToken().tokenType == TokenType::IDENTIFIER;
-    std::cout << "table\t\t" << (res ? "true" : "false") << "\n";
     return res;
 }
 
@@ -109,25 +108,21 @@ bool Parser::whereStatement() {
 
 bool Parser::columnName() {
     bool res = tree({ FUNC(functional), TokenType::STAR, FUNC(identifier) });
-    std::cout << "colunmName\t" << (res ? "true" : "false") << "\n";
     return res;
 }
 
 bool Parser::identifier() {
     bool res = lexer.getNextToken().tokenType == TokenType::IDENTIFIER;
-    std::cout << "identifier\t" << (res ? "true" : "false") << "\n";
     return res;
 }
 
 bool Parser::functional() {
     bool res = chain({ FUNC(identifier), TokenType::LBRACKET, FUNC(columnName),
                        TokenType::RBRACKET });
-    std::cout << "functional\t" << (res ? "true" : "false") << "\n";
     return res;
 }
 bool Parser::field() {
     bool res = tree({ FUNC(functional), FUNC(identifier), TokenType::STAR });
-    std::cout << "colunmName\t" << (res ? "true" : "false") << "\n";
     return res;
 }
 
