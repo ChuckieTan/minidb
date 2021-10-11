@@ -68,8 +68,10 @@ bool Parser::match(MatchType &condition) {
 }
 
 bool Parser::chain(std::initializer_list<MatchType> args) {
+    auto savePoint = lexer.mark();
     for (auto condition : args) {
         if (!match(condition)) {
+            lexer.reset(savePoint);
             return false;
         }
     }
@@ -77,37 +79,51 @@ bool Parser::chain(std::initializer_list<MatchType> args) {
 }
 
 bool Parser::selectStatement() {
-    return chain({ TokenType::SELECT, FUNC(selectList), TokenType::FROM,
+    bool res = chain({ TokenType::SELECT, FUNC(selectList), TokenType::FROM,
                    FUNC(table) }) &&
-           optional({ FUNC(whereStatement) }) &&
-           chain({ TokenType::SEMICOLON });
+           many({ FUNC(whereStatement) }) && chain({ TokenType::SEMICOLON });
+    return res;
 }
 
 bool Parser::selectList() {
-    return field() && optional({ TokenType::COMMA, FUNC(field) });
+    bool res = field() && many({ TokenType::COMMA, FUNC(field) });
+    return res;
 }
 
 bool Parser::table() {
-    return lexer.getNextToken().tokenType == TokenType::IDENTIFIER;
+    bool res = lexer.getNextToken().tokenType == TokenType::IDENTIFIER;
+    return res;
 }
 
 bool Parser::whereStatement() {
     return false;
 }
 
-bool Parser::word() {
-    return lexer.getNextToken().tokenType == TokenType::IDENTIFIER;
-}
-bool Parser::functional() {
-    return chain({FUNC(word), TokenType::LBRACKET, FUNC(word), TokenType::RBRACKET });
-}
-bool Parser::field() {
-    return tree({ FUNC(functional), FUNC(word) });
+bool Parser::columnName() {
+    bool res = tree({ FUNC(identifier), TokenType::STAR, FUNC(functional) });
+    std::cout << "functional\t" << (res ? "true" : "false") << "\n";
+    return res;
 }
 
-bool Parser::optional(std::initializer_list<MatchType> args) {
+bool Parser::identifier() {
+    bool res = lexer.getNextToken().tokenType == TokenType::IDENTIFIER;
+    return res;
+}
+
+bool Parser::functional() {
+    bool res = chain({ FUNC(identifier), TokenType::LBRACKET, FUNC(columnName),
+                   TokenType::RBRACKET });
+    std::cout << "functional\t" << (res?"true":"false") << "\n";
+    return res;
+}
+bool Parser::field() {
+    bool res = tree({ FUNC(functional), FUNC(identifier), TokenType::STAR });
+    return res;
+}
+
+bool Parser::many(std::initializer_list<MatchType> args) {
     auto savePoint = lexer.mark();
-    while(chain(args)) {
+    while (chain(args)) {
         savePoint = lexer.mark();
     }
     lexer.reset(savePoint);

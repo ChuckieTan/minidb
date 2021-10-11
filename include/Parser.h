@@ -42,11 +42,12 @@ protected:
 
     bool selectList();
     bool table();
-    bool word();
+    bool columnName();
+    bool identifier();
     bool functional();
     bool field();
     bool chain(std::initializer_list<MatchType> args);
-    bool optional(std::initializer_list<MatchType> args);
+    bool many(std::initializer_list<MatchType> args);
     bool tree(std::initializer_list<MatchType> args);
 };
 
