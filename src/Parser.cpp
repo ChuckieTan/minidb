@@ -1,11 +1,11 @@
 #include "Parser.h"
 #include "Lexer.h"
 #include "TokenType.h"
-#include <variant>
 #include <functional>
 #include <initializer_list>
 #include <iostream>
 #include <string>
+#include <variant>
 
 #define FUNC(fun) std::function([ & ]() -> bool { return fun(); })
 
@@ -44,6 +44,10 @@ TokenType Parser::MatchType::getToken() {
     return std::get<TokenType>(_data);
 }
 
+Parser::Parser(const Lexer &_lexer)
+    : lexer(_lexer) {
+}
+
 Parser::Parser(std::string &&_sql)
     : lexer(_sql) {
 }
@@ -66,24 +70,32 @@ bool Parser::match(MatchType &condition) {
 bool Parser::chain(std::initializer_list<MatchType> args) {
     for (auto condition : args) {
         if (!match(condition)) {
+            std::cout << "false" << std::endl;
             return false;
         }
+        if (condition.isFunc()) {
+            std::cout << "func\n";
+        } else if (condition.isToken()) {
+            std::cout << static_cast<int>(condition.getToken()) << "\n";
+        }
     }
+    std::cout << "true" << std::endl;
     return true;
 }
 
 bool Parser::selectStatement() {
     return chain({ TokenType::SELECT, FUNC(selectList), TokenType::FROM,
                    FUNC(table) }) &&
-           optional({ FUNC(whereStatement) }) && chain({TokenType::COMMA});
+           optional({ FUNC(whereStatement) }) &&
+           chain({ TokenType::SEMICOLON });
 }
 
 bool Parser::selectList() {
-    return word() && optional({ TokenType::COMMA, FUNC(word) });
+    return field() && optional({ TokenType::COMMA, FUNC(word) });
 }
 
 bool Parser::table() {
-    return lexer.getNextToken() == TokenType::IDENTIFIER;
+    return lexer.getNextToken().tokenType == TokenType::IDENTIFIER;
 }
 
 bool Parser::whereStatement() {
@@ -94,7 +106,7 @@ bool Parser::word() {
     return lexer.getNextToken().tokenType == TokenType::IDENTIFIER;
 }
 bool Parser::functional() {
-    return chain({ TokenType::LBRACKET, FUNC(word), TokenType::RBRACKET });
+    return chain({FUNC(word), TokenType::LBRACKET, FUNC(word), TokenType::RBRACKET });
 }
 bool Parser::field() {
     return tree({ FUNC(functional), FUNC(word) });
@@ -106,13 +118,12 @@ bool Parser::optional(std::initializer_list<MatchType> args) {
 
 bool Parser::tree(std::initializer_list<MatchType> args) {
     auto savePoint = lexer.mark();
-    for(auto condition: args) {
-        if(match(condition)) {
+    for (auto condition : args) {
+        if (match(condition)) {
             return true;
         }
         lexer.reset(savePoint);
     }
-    lexer.reset(savePoint);
     return false;
 }
 

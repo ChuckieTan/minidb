@@ -10,6 +10,7 @@ namespace minidb {
 
 class Parser {
 public:
+    Parser(const Lexer &_lexer);
     Parser(std::string &&_sql);
     Parser(const std::string &_sql);
     class MatchType {

@@ -1,5 +1,6 @@
 #include "Input.h"
 #include "MinidbStrings.h"
+#include "Parser.h"
 #include "TokenType.h"
 #include "Lexer.h"
 #include <any>
@@ -12,6 +13,8 @@ int main(int argc, char *argv[]) {
     auto input = minidb::Input();
     input.readInputFromStream(std::cin);
     minidb::Lexer lexer(input.buffer);
+    minidb::Parser parser(lexer);
+    std::cout << (parser.selectStatement()? 1: 0) << std::endl;
     for (auto token = lexer.getNextToken();
          token.tokenType != minidb::TokenType::END &&
          token.tokenType != minidb::TokenType::ILLEGAL;
