@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <spdlog/spdlog.h>
 
 namespace minidb {
 
@@ -13,6 +14,6 @@ std::unordered_map<MinidbStrings::StringType, std::string>
     };
 
 void MinidbStrings::print_string(StringType stringType) {
-    std::cout << strings[ stringType ];
+    fmt::print(strings[ stringType ]);
 }
 } // namespace minidb

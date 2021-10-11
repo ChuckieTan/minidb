@@ -23,7 +23,9 @@ add_executable(minidb "${sources}")
 target_include_directories(minidb PUBLIC
     "${PROJECT_SOURCE_DIR}/include"
 )
-target_link_libraries(minidb PRIVATE spdlog)
+target_link_libraries(minidb PRIVATE
+    spdlog::spdlog
+)
 
 option(PACKAGE_TESTS "Build the tests" ON)
 if(PACKAGE_TESTS)
