@@ -11,6 +11,10 @@ file(GLOB sources
     "${PROJECT_SOURCE_DIR}/src/*.cpp"
 )
 
+IF (CMAKE_BUILD_TYPE STREQUAL Debug)
+    ADD_DEFINITIONS(-DDEBUG)
+ENDIF()
+
 add_executable(minidb "${sources}")
 target_include_directories(minidb PUBLIC
     "${PROJECT_SOURCE_DIR}/include"
