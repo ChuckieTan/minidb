@@ -9,6 +9,10 @@
 
 #define FUNC(fun) std::function([ & ]() -> bool { return fun(); })
 
+#ifdef DEBUG
+int indent = 0;
+#endif
+
 namespace minidb {
 
 Parser::MatchType::MatchType(const std::string &str) {
@@ -80,8 +84,9 @@ bool Parser::chain(std::initializer_list<MatchType> args) {
 
 bool Parser::selectStatement() {
     bool res = chain({ TokenType::SELECT, FUNC(selectList), TokenType::FROM,
-                   FUNC(table) }) &&
-           many({ FUNC(whereStatement) }) && chain({ TokenType::SEMICOLON });
+                       FUNC(table) }) &&
+               many({ FUNC(whereStatement) }) &&
+               chain({ TokenType::SEMICOLON });
     return res;
 }
 
@@ -100,8 +105,8 @@ bool Parser::whereStatement() {
 }
 
 bool Parser::columnName() {
-    bool res = tree({ FUNC(identifier), TokenType::STAR, FUNC(functional) });
-    std::cout << "functional\t" << (res ? "true" : "false") << "\n";
+    bool res = tree({ FUNC(functional), TokenType::STAR, FUNC(identifier) });
+    // std::cout << "colunmName\t" << (res ? "true" : "false") << "\n";
     return res;
 }
 
@@ -112,8 +117,8 @@ bool Parser::identifier() {
 
 bool Parser::functional() {
     bool res = chain({ FUNC(identifier), TokenType::LBRACKET, FUNC(columnName),
-                   TokenType::RBRACKET });
-    std::cout << "functional\t" << (res?"true":"false") << "\n";
+                       TokenType::RBRACKET });
+    // std::cout << "functional\t" << (res ? "true" : "false") << "\n";
     return res;
 }
 bool Parser::field() {
