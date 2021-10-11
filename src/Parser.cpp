@@ -70,16 +70,9 @@ bool Parser::match(MatchType &condition) {
 bool Parser::chain(std::initializer_list<MatchType> args) {
     for (auto condition : args) {
         if (!match(condition)) {
-            std::cout << "false" << std::endl;
             return false;
         }
-        if (condition.isFunc()) {
-            std::cout << "func\n";
-        } else if (condition.isToken()) {
-            std::cout << static_cast<int>(condition.getToken()) << "\n";
-        }
     }
-    std::cout << "true" << std::endl;
     return true;
 }
 

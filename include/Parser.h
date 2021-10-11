@@ -35,13 +35,13 @@ public:
     };
     bool match(MatchType &condition);
     bool selectStatement();
+    bool whereStatement();
 
 protected:
     Lexer lexer;
 
     bool selectList();
     bool table();
-    bool whereStatement();
     bool word();
     bool functional();
     bool field();
