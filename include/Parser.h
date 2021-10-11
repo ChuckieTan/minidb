@@ -35,7 +35,7 @@ public:
     };
     bool match(MatchType &condition);
     bool selectStatement();
-    bool whereStatement();
+    bool whereExpression();
 
 protected:
     Lexer lexer;
@@ -43,9 +43,10 @@ protected:
     bool selectList();
     bool table();
     bool columnName();
+    bool expression();
     bool identifier();
     bool functional();
-    bool field();
+    bool resultColumn();
     bool chain(std::initializer_list<MatchType> args);
     bool many(std::initializer_list<MatchType> args);
     bool optional(std::initializer_list<MatchType> args);

@@ -88,13 +88,13 @@ bool Parser::chain(std::initializer_list<MatchType> args) {
 bool Parser::selectStatement() {
     bool res = chain({ TokenType::SELECT, FUNC(selectList), TokenType::FROM,
                        FUNC(table) }) &&
-               many({ FUNC(whereStatement) }) &&
+               many({ FUNC(whereExpression) }) &&
                chain({ TokenType::SEMICOLON });
     return res;
 }
 
 bool Parser::selectList() {
-    bool res = field() && many({ TokenType::COMMA, FUNC(field) });
+    bool res = resultColumn() && many({ TokenType::COMMA, FUNC(resultColumn) });
     return res;
 }
 
@@ -103,8 +103,14 @@ bool Parser::table() {
     return res;
 }
 
-bool Parser::whereStatement() {
-    return false;
+bool Parser::expression() {
+    bool res = true;
+    return res;
+}
+
+bool Parser::whereExpression() {
+    bool res = chain({TokenType::WHERE, FUNC(expression)});
+    return res;
 }
 
 bool Parser::columnName() {
@@ -122,7 +128,7 @@ bool Parser::functional() {
                        TokenType::RBRACKET });
     return res;
 }
-bool Parser::field() {
+bool Parser::resultColumn() {
     bool res = tree({ FUNC(functional), FUNC(identifier), TokenType::STAR });
     return res;
 }
