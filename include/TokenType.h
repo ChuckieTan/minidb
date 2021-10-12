@@ -10,6 +10,7 @@ enum class TokenType {
     DROP,
     SELECT,
     FROM,
+    AS,
     WHERE,
     AND,
     OR,
@@ -20,9 +21,13 @@ enum class TokenType {
     LBRACKET,         // (
     RBRACKET,         // )
     IN,               // in
+    IF,               // if
+    EXISTS,           // exists
     IS,               // is
-    NULL_,             // null
-    EQUAL,            // =
+    NULL_,            // null
+    TRUE,             // true
+    FALSE,            // false
+    EQUAL,            // ==
     NOT_EQUAL,        // '!=' <>
     LESS,             // <
     LESS_OR_EQUAL,    // <=
@@ -36,5 +41,13 @@ enum class TokenType {
     SEMICOLON,        // ;
     ILLEGAL,          // illegal token
     END,              // end of SQL
+
+    DOT,              // .
+    BETWEEN,          // between
+    DISTINCT,         // distinct
+    DIV,              // /
+    MOD,              // %
+    ASSIGN,           // =
+    ALL,              // all
 };
 }

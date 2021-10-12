@@ -14,9 +14,12 @@ std::unordered_map<std::string, TokenType> Lexer::symbolTokenType = {
     { ",", TokenType::COMMA },      { "*", TokenType::STAR },
     { "(", TokenType::LBRACKET },   { ")", TokenType::RBRACKET },
     { "+", TokenType::PLUS },       { "-", TokenType::MINUS },
-    { ";", TokenType::SEMICOLON },  { "=", TokenType::EQUAL },
+    { ";", TokenType::SEMICOLON },  { "==", TokenType::EQUAL },
     { "!=", TokenType::NOT_EQUAL }, { "<=", TokenType::LESS_OR_EQUAL },
-    { "<>", TokenType::NOT_EQUAL }, { ">=", TokenType::GREATER_OR_EQUAL }
+    { "<>", TokenType::NOT_EQUAL }, { ">=", TokenType::GREATER_OR_EQUAL },
+    { "=", TokenType::ASSIGN },     { ".", TokenType::DOT },
+    { "/", TokenType::DIV },        { "%", TokenType::MOD }
+
 };
 
 Lexer::Lexer(std::string &&_sql)
@@ -74,14 +77,28 @@ void Lexer::toLowerCase(std::string &str) {
 }
 
 std::unordered_map<std::string, TokenType> Lexer::keywordTokenType = {
-    { "create", TokenType::CREATE }, { "table", TokenType::TABLE },
-    { "insert", TokenType::INSERT }, { "into", TokenType::INTO },
-    { "delete", TokenType::DELETE }, { "drop", TokenType::DROP },
-    { "select", TokenType::SELECT }, { "from", TokenType::FROM },
-    { "where", TokenType::WHERE },   { "and", TokenType::AND },
-    { "or", TokenType::OR },         { "not", TokenType::NOT },
-    { "in", TokenType::IN },         { "is", TokenType::IS },
-    { "null", TokenType::NULL_ }
+    { "create", TokenType::CREATE },
+    { "table", TokenType::TABLE },
+    { "insert", TokenType::INSERT },
+    { "into", TokenType::INTO },
+    { "delete", TokenType::DELETE },
+    { "drop", TokenType::DROP },
+    { "select", TokenType::SELECT },
+    { "from", TokenType::FROM },
+    { "where", TokenType::WHERE },
+    { "and", TokenType::AND },
+    { "or", TokenType::OR },
+    { "not", TokenType::NOT },
+    { "in", TokenType::IN },
+    { "is", TokenType::IS },
+    { "null", TokenType::NULL_ },
+    { "if", TokenType::IF },
+    { "exists", TokenType::EXISTS },
+    { "true", TokenType::TRUE },
+    { "false", TokenType::FALSE },
+    { "between", TokenType::BETWEEN },
+    { "distinct", TokenType::DISTINCT },
+    { "all", TokenType::ALL }
 };
 
 Token Lexer::getLiteralToken() {
