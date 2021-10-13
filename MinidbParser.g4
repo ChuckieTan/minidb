@@ -16,7 +16,7 @@ table_name:
 ;
 
 create_table_stmt:
-    CREATE_ TABLE_ (IF_ NOT_ EXISTS_)? table_name
+    CREATE_ TABLE_ table_name
     OPEN_PAR list[column_def] CLOSE_PAR
 ;
 
@@ -53,49 +53,34 @@ column_name_with_table:
     (table_name DOT)? column_name
 ;
 
-// expr's grammer with left recursion
-// expr:
-//       literal_value
-//     | function
-//     | column_name_with_table
-//     | OPEN_PAR expr CLOSE_PAR
-//     | unary_operator expr
-//     | expr binary_operator expr
-//     | expr NOT_? BETWEEN_ expr AND_ expr
-//     | expr NOT_? IN_ OPEN_PAR select_stmt CLOSE_PAR
-//     | (NOT_)? EXISTS_ OPEN_PAR select_stmt CLOSE_PAR
-// ;
-
-expr_first_token:
-      function
-    | literal_value
-    | OPEN_PAR expr CLOSE_PAR
-    | unary_operator expr
+expr_lvalue:
+      literal_value
     | column_name_with_table
-    | (NOT_)? EXISTS_ OPEN_PAR select_stmt CLOSE_PAR
 ;
-
-expr_tail:
-      binary_operator expr
-    | NOT_? BETWEEN_ expr AND_ expr
-    | NOT_? IN_ OPEN_PAR select_stmt CLOSE_PAR
-    | <empty>
+expr_rvalue:
+      literal_value
+    | column_name_with_table
 ;
-
 expr:
-    expr_first_token expr_tail
+      expr_lvalue binary_operator expr_rvalue
+        (logical_operator expr)*
+    | expr_lvalue (NOT_? IN_) OPEN_PAR select_stmt CLOSE_PAR
+    | (NOT_? EXISTS_) OPEN_PAR select_stmt CLOSE_PAR
+;
+
+compare_operator:
+      ( LT | LT_EQ | GT | GT_EQ )
+    | ( ASSIGN | EQ | NOT_EQ )
+;
+
+logical_operator:
+    AND_ || OR_
 ;
 
 function:
       function_name OPEN_PAR ((DISTINCT_? table_name) | STAR)? CLOSE_PAR
+;
 
-binary_operator:
-      ( STAR | DIV | MOD )
-    | ( PLUS | MINUS )
-    | ( LT | LT_EQ | GT | GT_EQ )
-    | ( ASSIGN | EQ | NOT_EQ | IS_ NOT_? | IN_ )
-    | AND_
-    | OR_
 
 literal_value:
       numeric_literal
@@ -145,8 +130,8 @@ any_name:
 ;
 
 numeric_literal:
-      INTEGER
-    | FLOAT
+      MINUS? INTEGER
+    | MINUS? FLOAT
 ;
 
 keyword:
@@ -194,3 +179,45 @@ keyword:
     | INTEGER        // integer number
     | FLOAT          // float number
 ;
+
+// expr's grammer with left recursion
+// expr:
+//       literal_value
+//     | function
+//     | column_name_with_table
+//     | OPEN_PAR expr CLOSE_PAR
+//     | unary_operator expr
+//     | expr binary_operator expr
+//     | expr NOT_? BETWEEN_ expr AND_ expr
+//     | expr NOT_? IN_ OPEN_PAR select_stmt CLOSE_PAR
+//     | (NOT_)? EXISTS_ OPEN_PAR select_stmt CLOSE_PAR
+// ;
+ 
+// expr_first_token:
+//       function
+//     | literal_value
+//     | OPEN_PAR expr CLOSE_PAR
+//     | unary_operator expr
+//     | column_name_with_table
+//     | (NOT_)? EXISTS_ OPEN_PAR select_stmt CLOSE_PAR
+// ;
+// expr_tail:
+//       binary_operator expr
+//     | NOT_? BETWEEN_ expr AND_ expr
+//     | NOT_? IN_ OPEN_  PAR select_stmt CLOSE_PAR
+//     | <empty>
+// ;
+// expr:
+//     expr_first_token expr_tail
+// ;
+// unary_operator:
+//       MINUS
+//     | PLUS
+// ;
+// binary_operator:
+//       ( STAR | DIV | MOD )
+//     | ( PLUS | MINUS )
+//     | ( LT | LT_EQ | GT | GT_EQ )
+//     | ( ASSIGN | EQ | NOT_EQ | IS_ NOT_? | IN_ )
+//     | AND_
+//     | OR_
