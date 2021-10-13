@@ -21,7 +21,7 @@ Parser::MatchType::MatchType(const std::string &str) {
     _data    = str;
     dataType = DataType::STRING;
 }
-Parser::MatchType::MatchType(const TokenType tokenType) {
+Parser::MatchType::MatchType(TokenType &&tokenType) {
     _data    = tokenType;
     dataType = DataType::TOKEN;
 }
@@ -62,33 +62,10 @@ Parser::Parser(const std::string &_sql)
     : lexer(_sql) {
 }
 
-bool Parser::match(MatchType &condition) {
-    if (condition.isToken()) {
-        return lexer.getNextToken().tokenType == condition.getToken();
-    } else if (condition.isFunc()) {
-        return condition.getFunc()();
-    } else if (condition.isString()) {
-        return lexer.getNextToken().val == condition.getString();
-    }
-    return false;
-}
-
-bool Parser::chain(std::initializer_list<MatchType> args) {
-    spdlog::info(__PRETTY_FUNCTION__);
-    auto savePoint = lexer.mark();
-    for (auto condition : args) {
-        if (!match(condition)) {
-            lexer.reset(savePoint);
-            return false;
-        }
-    }
-    return true;
-}
-
 bool Parser::selectStatement() {
     bool res = chain({ TokenType::SELECT, FUNC(selectList), TokenType::FROM,
                        FUNC(table) }) &&
-               many({ FUNC(whereExpression) }) &&
+               optional({ FUNC(whereExpression) }) &&
                chain({ TokenType::SEMICOLON });
     return res;
 }
@@ -99,7 +76,17 @@ bool Parser::selectList() {
 }
 
 bool Parser::table() {
-    bool res = lexer.getNextToken().tokenType == TokenType::IDENTIFIER;
+    bool res = match(TokenType::IDENTIFIER);
+    return res;
+}
+
+bool Parser::columnNameWithTable() {
+    auto savePoint = lexer.mark();
+    bool res       = optional({ FUNC(table), TokenType::DOT }) &&
+               match(TokenType::IDENTIFIER);
+    if (!res) {
+        lexer.reset(savePoint);
+    }
     return res;
 }
 
@@ -108,8 +95,46 @@ bool Parser::expression() {
     return res;
 }
 
+bool Parser::expressionLValue() {
+    bool res = chain({ FUNC(literalValue), FUNC(columnNameWithTable) });
+    return res;
+}
+
+bool Parser::expressionRValue() {
+    return expressionLValue();
+}
+
+bool Parser::compareOperator() {
+    bool res =
+        tree({ TokenType::LESS, TokenType::LESS_OR_EQUAL, TokenType::GREATER,
+               TokenType::GREATER_OR_EQUAL, TokenType::ASSIGN, TokenType::EQUAL,
+               TokenType::NOT_EQUAL });
+    return res;
+}
+
+bool Parser::logicalOperator() {
+    bool res = tree({ TokenType::AND, TokenType::OR });
+}
+
+bool Parser::numbericLiteral() {
+    auto savePoint = lexer.mark();
+    bool res       = optional({ TokenType::MINUS });
+    res = res && (match(TokenType::INTEGER) || match(TokenType::FLOAT));
+    if (!res) {
+        lexer.reset(savePoint);
+    }
+    return res;
+}
+
+bool Parser::literalValue() {
+    bool res = numbericLiteral() || match(TokenType::STRING) ||
+               match(TokenType::NULL_) || match(TokenType::TRUE) ||
+               match(TokenType::FALSE);
+    return res;
+}
+
 bool Parser::whereExpression() {
-    bool res = chain({TokenType::WHERE, FUNC(expression)});
+    bool res = chain({ TokenType::WHERE, FUNC(expression) });
     return res;
 }
 
@@ -119,7 +144,7 @@ bool Parser::columnName() {
 }
 
 bool Parser::identifier() {
-    bool res = lexer.getNextToken().tokenType == TokenType::IDENTIFIER;
+    bool res = match(TokenType::IDENTIFIER);
     return res;
 }
 
@@ -133,31 +158,45 @@ bool Parser::resultColumn() {
     return res;
 }
 
-bool Parser::optional(std::initializer_list<MatchType> args) {
+bool Parser::match(MatchType condition) {
     auto savePoint = lexer.mark();
-    if (chain(args)) {
-        savePoint = lexer.mark();
+    if (condition.isToken()) {
+        return lexer.getNextToken().tokenType == condition.getToken();
+    } else if (condition.isFunc()) {
+        return condition.getFunc()();
+    } else if (condition.isString()) {
+        return lexer.getNextToken().val == condition.getString();
     }
     lexer.reset(savePoint);
+    return false;
+}
+
+bool Parser::chain(std::initializer_list<MatchType> args) {
+    for (const auto &condition : args) {
+        if (!match(condition)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool Parser::optional(std::initializer_list<MatchType> args) {
+    if (chain(args)) {
+    }
     return true;
 }
 
 bool Parser::many(std::initializer_list<MatchType> args) {
-    auto savePoint = lexer.mark();
     while (chain(args)) {
-        savePoint = lexer.mark();
     }
-    lexer.reset(savePoint);
     return true;
 }
 
 bool Parser::tree(std::initializer_list<MatchType> args) {
-    auto savePoint = lexer.mark();
-    for (auto condition : args) {
+    for (const auto &condition : args) {
         if (match(condition)) {
             return true;
         }
-        lexer.reset(savePoint);
     }
     return false;
 }

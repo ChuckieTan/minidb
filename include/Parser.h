@@ -17,7 +17,7 @@ public:
     public:
         MatchType() = default;
         MatchType(const std::string &str);
-        MatchType(const TokenType tokenType);
+        MatchType(TokenType &&tokentype);
         MatchType(const std::function<bool()> &func);
 
         bool isString();
@@ -33,9 +33,8 @@ public:
         DataType dataType = DataType::INVALID;
         std::variant<std::string, TokenType, std::function<bool()>> _data;
     };
-    bool match(MatchType &condition);
+    bool match(MatchType condition);
     bool selectStatement();
-    bool whereExpression();
 
 protected:
     Lexer lexer;
@@ -43,9 +42,21 @@ protected:
     bool selectList();
     bool table();
     bool columnName();
+
+    bool whereExpression();
     bool expression();
+    bool expressionLValue();
+    bool expressionRValue();
+
+    bool compareOperator();
+    bool logicalOperator();
+
+    bool numbericLiteral();
+    bool literalValue();
+    
     bool identifier();
     bool functional();
+    bool columnNameWithTable();
     bool resultColumn();
     bool chain(std::initializer_list<MatchType> args);
     bool many(std::initializer_list<MatchType> args);
