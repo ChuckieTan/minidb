@@ -23,50 +23,54 @@ std::unordered_map<std::string, TokenType> Lexer::symbolTokenType = {
 };
 
 Lexer::Lexer(std::string &&_sql)
-    : pos(0)
+    : sqlPos(0)
+    , tokenPos(0)
     , sql(_sql) {
+    scanTokens();
 }
 
 Lexer::Lexer(const std::string &_sql)
-    : pos(0)
+    : sqlPos(0)
+    , tokenPos(0)
     , sql(_sql) {
+    scanTokens();
 }
 
 Lexer::SavePoint Lexer::mark() {
     SavePoint savePoint;
-    savePoint.pos = pos;
+    savePoint.tokenPos = tokenPos;
     return savePoint;
 }
 
-void Lexer::reset(int _pos) {
-    pos = _pos;
+void Lexer::reset(int _tokenPos) {
+    tokenPos = _tokenPos;
 }
 
 void Lexer::reset(SavePoint savePoint) {
-    pos = savePoint.pos;
+    tokenPos = savePoint.tokenPos;
 }
 
 Token Lexer::getSymbolToken() {
     Token token;
-    if (auto ch = sql.substr(pos, 2); symbolTokenType.count(ch)) {
+    if (auto ch = sql.substr(sqlPos, 2); symbolTokenType.count(ch)) {
         token = Token(symbolTokenType[ ch ], ch);
-        pos += 2;
-    } else if (auto ch = sql.substr(pos, 1); symbolTokenType.count(ch)) {
+        sqlPos += 2;
+    } else if (auto ch = sql.substr(sqlPos, 1); symbolTokenType.count(ch)) {
         token = Token(symbolTokenType[ ch ], ch);
-        pos += 1;
+        sqlPos += 1;
     } else {
-        if (sql[ pos ] == '\'') {
-            pos++;
+        if (sql[ sqlPos ] == '\'') {
+            sqlPos++;
             int len = 0;
-            while (
-                !(sql[ pos + len ] == '\'' && sql[ pos + len - 1 ] != '\\')) {
+            while (!(sql[ sqlPos + len ] == '\'' &&
+                     sql[ sqlPos + len - 1 ] != '\\')) {
                 len++;
             }
-            token = Token(TokenType::STRING, sql.substr(pos, pos + len));
-            pos += len + 1;
+            token = Token(TokenType::STRING, sql.substr(sqlPos, sqlPos + len));
+            sqlPos += len + 1;
         } else {
-            token = Token(TokenType::ILLEGAL, sql.substr(pos, 1));
-            pos += 1;
+            token = Token(TokenType::ILLEGAL, sql.substr(sqlPos, 1));
+            sqlPos += 1;
         }
     }
     return token;
@@ -104,51 +108,51 @@ std::unordered_map<std::string, TokenType> Lexer::keywordTokenType = {
 Token Lexer::getLiteralToken() {
     Token token(TokenType::ILLEGAL, "");
     int   len = 1;
-    while (std::isalpha(sql[ pos + len ]) || std::isdigit(sql[ pos + len ]) ||
-           sql[ pos + len ] == '_') {
+    while (std::isalpha(sql[ sqlPos + len ]) ||
+           std::isdigit(sql[ sqlPos + len ]) || sql[ sqlPos + len ] == '_') {
         len++;
     }
-    std::string word = sql.substr(pos, len);
+    std::string word = sql.substr(sqlPos, len);
     toLowerCase(word);
     if (keywordTokenType.count(word) != 0) {
         token = Token(keywordTokenType[ word ], word);
     } else {
         token = Token(TokenType::IDENTIFIER, word);
     }
-    pos += len;
+    sqlPos += len;
     return token;
 }
 
 Token Lexer::getNumberToken() {
     Token token(TokenType::INTEGER, "0");
     int   len = 0, numOfDot = 0;
-    while (std::isdigit(sql[ pos + len ]) || sql[ pos + len ] == '.') {
-        if (sql[ pos + len ] == '.') {
+    while (std::isdigit(sql[ sqlPos + len ]) || sql[ sqlPos + len ] == '.') {
+        if (sql[ sqlPos + len ] == '.') {
             numOfDot++;
         }
         len++;
     }
     if (numOfDot == 0) {
-        token = Token(TokenType::INTEGER, sql.substr(pos, len));
+        token = Token(TokenType::INTEGER, sql.substr(sqlPos, len));
     } else if (numOfDot == 1) {
-        token = Token(TokenType::FLOAT, sql.substr(pos, len));
+        token = Token(TokenType::FLOAT, sql.substr(sqlPos, len));
     } else {
-        token = Token(TokenType::ILLEGAL, sql.substr(pos, len));
+        token = Token(TokenType::ILLEGAL, sql.substr(sqlPos, len));
     }
-    pos += len;
+    sqlPos += len;
     return token;
 }
 
-Token Lexer::getNextToken() {
-    if (pos >= sql.size()) {
+Token Lexer::scanNextToken() {
+    if (sqlPos >= sql.size()) {
         return Token(TokenType::END, "");
     }
     // ingore the space
-    while (std::isspace(sql[ pos ])) {
-        pos++;
+    while (std::isspace(sql[ sqlPos ])) {
+        sqlPos++;
     }
     Token token;
-    char  ch = sql[ pos ];
+    char  ch = sql[ sqlPos ];
     if (std::isdigit(ch)) {
         token = getNumberToken();
     } else if (std::isalpha(ch)) {
@@ -157,5 +161,27 @@ Token Lexer::getNextToken() {
         token = getSymbolToken();
     }
     return token;
+}
+
+Token Lexer::getNextToken() {
+    if (tokenPos < tokenSequence.size()) {
+        return tokenSequence[ tokenPos++ ];
+    } else {
+        return Token(TokenType::END);
+    }
+}
+
+Token Lexer::getCurrentToken() {
+    if (tokenPos < tokenSequence.size()) {
+        return tokenSequence[ tokenPos ];
+    } else {
+        return Token(TokenType::END);
+    }
+}
+
+void Lexer::scanTokens() {
+    do {
+        tokenSequence.push_back(scanNextToken());
+    } while (tokenSequence.back().tokenType != TokenType::END);
 }
 } // namespace minidb

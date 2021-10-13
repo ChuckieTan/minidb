@@ -12,19 +12,24 @@ namespace minidb {
 class Lexer {
 public:
     struct SavePoint {
-        int pos;
+        int tokenPos;
     };
     Lexer(std::string &&sql);
     Lexer(const std::string &_sql);
     Token getNextToken();
+    Token getCurrentToken();
+    Token scanNextToken();
+    void  scanTokens();
 
     SavePoint mark();
-    void reset(int _pos);
-    void reset(SavePoint savePoint);
+    void      reset(int _tokenPos);
+    void      reset(SavePoint savePoint);
 
 protected:
-    int                                               pos;
+    int                                               sqlPos;
     std::string                                       sql;
+    int                                               tokenPos;
+    std::vector<Token>                                tokenSequence;
     static std::unordered_map<std::string, TokenType> symbolTokenType;
     static std::unordered_map<std::string, TokenType> keywordTokenType;
     static std::multimap<char, std::string>           keywordFirstLetter;
