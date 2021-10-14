@@ -1,6 +1,6 @@
 #pragma once
 
-namespace minidb {
+namespace minidb::ast {
 class SQLCreateTableStatement {
 
 };

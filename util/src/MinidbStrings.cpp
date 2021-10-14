@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <spdlog/spdlog.h>
 
-namespace minidb {
+namespace minidb::util {
 
 std::unordered_map<MinidbStrings::StringType, std::string>
     MinidbStrings::strings{

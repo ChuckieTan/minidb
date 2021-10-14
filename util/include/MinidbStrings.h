@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace minidb {
+namespace minidb::util {
 class MinidbStrings {
 public:
     enum class StringType { info, full_pragma, light_pragma };

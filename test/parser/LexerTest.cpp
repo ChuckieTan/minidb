@@ -6,7 +6,7 @@
 
 namespace {
     TEST(Lexer, DefaultConstructor) {
-        using namespace minidb;
+        using namespace minidb::parser;
         Lexer lexer(std::string("select * from student"));
         EXPECT_EQ(lexer.getNextToken().tokenType, TokenType::SELECT);
         EXPECT_EQ(lexer.getNextToken().tokenType, TokenType::STAR);

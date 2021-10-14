@@ -11,16 +11,17 @@ int main(int argc, char *argv[]) {
 #ifdef DEBUG
     fmt::print("Debug Mode\n");
 #endif
-    minidb::MinidbStrings::print_string(
-        minidb::MinidbStrings::StringType::info);
-    auto input = minidb::Input();
+    using namespace minidb;
+    util::MinidbStrings::print_string(
+        util::MinidbStrings::StringType::info);
+    auto input = util::Input();
     input.readInputFromStream(std::cin);
-    minidb::Lexer  lexer(input.buffer);
-    minidb::Parser parser(lexer);
+    parser::Lexer  lexer(input.buffer);
+    parser::Parser parser(lexer);
     fmt::print("{}\n", parser.selectStatement());
     for (auto token = lexer.getNextToken();
-         token.tokenType != minidb::TokenType::END &&
-         token.tokenType != minidb::TokenType::ILLEGAL;
+         token.tokenType != parser::TokenType::END &&
+         token.tokenType != parser::TokenType::ILLEGAL;
          token = lexer.getNextToken()) {
         fmt::print("{:<4} {}\n", token.tokenType, token.val);
     }

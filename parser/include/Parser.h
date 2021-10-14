@@ -6,7 +6,7 @@
 #include <string>
 #include <variant>
 
-namespace minidb {
+namespace minidb::parser {
 
 class Parser {
 public:

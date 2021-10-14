@@ -4,7 +4,7 @@
 #include <string>
 
 
-namespace minidb {
+namespace minidb::util {
 Input::Input() {
     buffer = std::string();
 }

@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace minidb {
+namespace minidb::parser {
 
 std::unordered_map<std::string, TokenType> Lexer::symbolTokenType = {
     { ",", TokenType::COMMA },      { "*", TokenType::STAR },

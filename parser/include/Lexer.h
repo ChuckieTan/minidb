@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace minidb {
+namespace minidb::parser {
 
 class Lexer {
 public:

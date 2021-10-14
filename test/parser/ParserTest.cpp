@@ -6,7 +6,7 @@
 
 namespace {
 TEST(MatchType, SelectStatement) {
-    using namespace minidb;
+    using namespace minidb::parser;
 
     // simple select statement
     Parser parser("select a from b;");

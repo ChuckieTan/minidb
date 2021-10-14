@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace minidb {
+namespace minidb::util {
 class Input {
 public:
     Input();

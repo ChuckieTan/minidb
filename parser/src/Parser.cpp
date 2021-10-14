@@ -15,7 +15,7 @@
 int indent = 0;
 #endif
 
-namespace minidb {
+namespace minidb::parser {
 
 Parser::MatchType::MatchType(const std::string &str) {
     _data    = str;
