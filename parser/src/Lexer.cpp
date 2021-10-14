@@ -5,6 +5,7 @@
 #include <cctype>
 #include <map>
 #include <string>
+#include <system_error>
 #include <unordered_map>
 #include <vector>
 
@@ -58,11 +59,10 @@ Token Lexer::getSymbolToken() {
         if (sql[ sqlPos ] == '\'') {
             sqlPos++;
             int len = 0;
-            while (!(sql[ sqlPos + len ] == '\'' &&
-                     sql[ sqlPos + len - 1 ] != '\\')) {
+            while (sql[ sqlPos + len ] != '\'') {
                 len++;
             }
-            token = Token(TokenType::STRING, sql.substr(sqlPos, sqlPos + len));
+            token = Token(TokenType::STRING, sql.substr(sqlPos, len));
             sqlPos += len + 1;
         } else {
             token = Token(TokenType::ILLEGAL, sql.substr(sqlPos, 1));
