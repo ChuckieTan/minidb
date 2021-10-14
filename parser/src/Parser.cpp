@@ -1,5 +1,6 @@
 #include "Parser.h"
 #include "Lexer.h"
+#include "SQLCreateTableStatement.h"
 #include "TokenType.h"
 #include <functional>
 #include <initializer_list>
@@ -62,100 +63,33 @@ Parser::Parser(const std::string &_sql)
     : lexer(_sql) {
 }
 
-bool Parser::selectStatement() {
-    bool res = chain({ TokenType::SELECT, FUNC(selectList), TokenType::FROM,
-                       FUNC(table) }) &&
-               optional({ FUNC(whereExpression) }) &&
-               chain({ TokenType::SEMICOLON });
-    return res;
-}
-
-bool Parser::selectList() {
-    bool res = resultColumn() && many({ TokenType::COMMA, FUNC(resultColumn) });
-    return res;
-}
-
-bool Parser::table() {
-    bool res = match(TokenType::IDENTIFIER);
-    return res;
-}
-
-bool Parser::columnNameWithTable() {
-    auto savePoint = lexer.mark();
-    bool res       = optional({ FUNC(table), TokenType::DOT }) &&
-               match(TokenType::IDENTIFIER);
-    if (!res) {
-        lexer.reset(savePoint);
+ast::SQLCreateTableStatement Parser::createTableStatement() {
+    ast::SQLCreateTableStatement statement;
+    if(chain({TokenType::CREATE, TokenType::TABLE})) {
+        statement.tableName = tableName();
+        if(match(TokenType::LBRACKET)) {
+            do {
+                statement.columnDefineList.push_back(columnDefine());
+            } while(match(TokenType::COMMA));
+        }
+    } else {
+        spdlog::error("not a create table statement");
     }
-    return res;
+    return statement;
 }
 
-bool Parser::expression() {
-    bool res = true;
-    return res;
+
+
+std::string Parser::tableName() {
+
 }
 
-bool Parser::expressionLValue() {
-    bool res = chain({ FUNC(literalValue), FUNC(columnNameWithTable) });
-    return res;
+ast::SQLTableElement Parser::tableElement() {
+
 }
 
-bool Parser::expressionRValue() {
-    return expressionLValue();
-}
+ast::SQLColumnDefine Parser::columnDefine() {
 
-bool Parser::compareOperator() {
-    bool res =
-        tree({ TokenType::LESS, TokenType::LESS_OR_EQUAL, TokenType::GREATER,
-               TokenType::GREATER_OR_EQUAL, TokenType::ASSIGN, TokenType::EQUAL,
-               TokenType::NOT_EQUAL });
-    return res;
-}
-
-bool Parser::logicalOperator() {
-    bool res = tree({ TokenType::AND, TokenType::OR });
-}
-
-bool Parser::numbericLiteral() {
-    auto savePoint = lexer.mark();
-    bool res       = optional({ TokenType::MINUS });
-    res = res && (match(TokenType::INTEGER) || match(TokenType::FLOAT));
-    if (!res) {
-        lexer.reset(savePoint);
-    }
-    return res;
-}
-
-bool Parser::literalValue() {
-    bool res = numbericLiteral() || match(TokenType::STRING) ||
-               match(TokenType::NULL_) || match(TokenType::TRUE) ||
-               match(TokenType::FALSE);
-    return res;
-}
-
-bool Parser::whereExpression() {
-    bool res = chain({ TokenType::WHERE, FUNC(expression) });
-    return res;
-}
-
-bool Parser::columnName() {
-    bool res = tree({ FUNC(functional), TokenType::STAR, FUNC(identifier) });
-    return res;
-}
-
-bool Parser::identifier() {
-    bool res = match(TokenType::IDENTIFIER);
-    return res;
-}
-
-bool Parser::functional() {
-    bool res = chain({ FUNC(identifier), TokenType::LBRACKET, FUNC(columnName),
-                       TokenType::RBRACKET });
-    return res;
-}
-bool Parser::resultColumn() {
-    bool res = tree({ FUNC(functional), FUNC(identifier), TokenType::STAR });
-    return res;
 }
 
 bool Parser::match(MatchType condition) {

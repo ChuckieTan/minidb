@@ -1,6 +1,9 @@
 #pragma once
 
 #include "Lexer.h"
+#include "SQLColumnDefine.h"
+#include "SQLCreateTableStatement.h"
+#include "SQLTableElement.h"
 #include "TokenType.h"
 #include <functional>
 #include <string>
@@ -33,35 +36,20 @@ public:
         DataType dataType = DataType::INVALID;
         std::variant<std::string, TokenType, std::function<bool()>> _data;
     };
-    bool match(MatchType condition);
-    bool selectStatement();
+    bool                         match(MatchType condition);
+    ast::SQLCreateTableStatement createTableStatement();
+    ast::SQLTableElement         tableElement();
+    ast::SQLColumnDefine         columnDefine();
 
 protected:
     Lexer lexer;
 
-    bool selectList();
-    bool table();
-    bool columnName();
+    std::string tableName();
 
-    bool whereExpression();
-    bool expression();
-    bool expressionLValue();
-    bool expressionRValue();
-
-    bool compareOperator();
-    bool logicalOperator();
-
-    bool numbericLiteral();
-    bool literalValue();
-    
-    bool identifier();
-    bool functional();
-    bool columnNameWithTable();
-    bool resultColumn();
     bool chain(std::initializer_list<MatchType> args);
     bool many(std::initializer_list<MatchType> args);
     bool optional(std::initializer_list<MatchType> args);
     bool tree(std::initializer_list<MatchType> args);
 };
 
-} // namespace minidb
+} // namespace minidb::parser

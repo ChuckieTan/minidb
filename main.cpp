@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
     input.readInputFromStream(std::cin);
     parser::Lexer  lexer(input.buffer);
     parser::Parser parser(lexer);
-    fmt::print("{}\n", parser.selectStatement());
+    // fmt::print("{}\n", parser.selectStatement());
     for (auto token = lexer.getNextToken();
          token.tokenType != parser::TokenType::END &&
          token.tokenType != parser::TokenType::ILLEGAL;

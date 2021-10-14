@@ -24,7 +24,7 @@ target_link_libraries(minidb PRIVATE
     spdlog::spdlog
     minidb::util
     minidb::parser
-    # minidb::ast
+    minidb::ast
 )
 
 option(PACKAGE_TESTS "Build the tests" ON)
