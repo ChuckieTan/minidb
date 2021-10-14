@@ -3,8 +3,10 @@
 #include "SQLColumnDefine.h"
 #include "SQLCreateTableStatement.h"
 #include "SQLDropTableStatement.h"
+#include "SQLInsertIntoStatement.h"
 #include "Token.h"
 #include "TokenType.h"
+#include "ValuesClause.h"
 #include <functional>
 #include <initializer_list>
 #include <iostream>
@@ -64,8 +66,8 @@ ast::SQLCreateTableStatement Parser::parseCreateTableStatement() {
                 statement.columnDefineList.push_back(columnDefine());
             } while (match(TokenType::COMMA));
         }
-        if (!(match(TokenType::RBRACKET) && match(TokenType::SEMICOLON))) {
-            spdlog::error("expected ')'");
+        if (!chain({ TokenType::RBRACKET, TokenType::SEMICOLON })) {
+            spdlog::error("expected ')' or ';'");
         }
     } else {
         spdlog::error("not a create table statement");
@@ -76,14 +78,77 @@ ast::SQLCreateTableStatement Parser::parseCreateTableStatement() {
 ast::SQLDropTableStatement Parser::parseDropTableStatement() {
     ast::SQLDropTableStatement statement;
     if (chain({ TokenType::DROP, TokenType::TABLE })) {
-        if (chain({ TokenType::NOT, TokenType::EXISTS })) {
+        if (chain({ TokenType::IF, TokenType::EXISTS })) {
             statement.ifExists = true;
         } else {
             statement.ifExists = false;
         }
         statement.tableName = tableName();
+        if (!chain({ TokenType::RBRACKET, TokenType::SEMICOLON })) {
+            spdlog::error("expected ')' or ';'");
+        }
+    } else {
+        spdlog::error("not a drop table statement");
     }
     return statement;
+}
+
+ast::SQLInsertIntoStatement Parser::parseInsertIntoStatement() {
+    ast::SQLInsertIntoStatement statement;
+    if (chain({ TokenType::INSERT, TokenType::INTO })) {
+        if (auto token = lexer.getNextToken();
+            token.tokenType == TokenType::IDENTIFIER) {
+            statement.tableName = token.val;
+        } else {
+            spdlog::error("expected a table name, given '{}'", token.val);
+        }
+        if (chain({ TokenType::VALUES, TokenType::LBRACKET })) {
+            do {
+                statement.values.push_back(literalValue());
+            } while (match(TokenType::COMMA));
+        } else {
+            spdlog::error("expected 'values' or '('");
+        }
+        if (!chain({ TokenType::RBRACKET, TokenType::SEMICOLON })) {
+            spdlog::error("expected ')' or ';'");
+        }
+    } else {
+        spdlog::error("not a insert into statement");
+    }
+    return statement;
+}
+
+ast::ValuesClause Parser::numericValue(int sign, Token token) {
+    if(token.tokenType == TokenType::ILLEGAL) {
+        token = lexer.getNextToken();
+    }
+    ast::ValuesClause value;
+    if (token.tokenType == TokenType::INTEGER) {
+        value = ast::ValuesClause(sign * std::stoi(token.val));
+    } else if (token.tokenType == TokenType::FLOAT) {
+        value = ast::ValuesClause(sign * std::stod(token.val));
+    } else {
+        spdlog::error("expected a value, given '{}'", token.val);
+    }
+    return value;
+}
+
+ast::ValuesClause Parser::literalValue() {
+    auto              token = lexer.getNextToken();
+    int               sign  = 1;
+    ast::ValuesClause value;
+    if (token.tokenType == TokenType::STRING) {
+        value = ast::ValuesClause(token.val);
+    } else if (token.tokenType == TokenType::PLUS) {
+        sign = 1;
+        value = numericValue(sign);
+    } else if (token.tokenType == TokenType::MINUS) {
+        sign = -1;
+        value = numericValue(sign);
+    } else {
+        value = numericValue(1, token);
+    }
+    return value;
 }
 
 std::string Parser::tableName() {

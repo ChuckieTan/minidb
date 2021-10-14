@@ -3,8 +3,8 @@ sql_stmt:
     | delete_stmt
     | drop_stmt
     | insert_stmt
-    | select_stmt
     | update_stmt
+    | select_stmt
 ;
 
 list[item]:
@@ -78,26 +78,22 @@ logical_operator:
 ;
 
 function:
-      function_name OPEN_PAR ((DISTINCT_? table_name) | STAR)? CLOSE_PAR
+      function_name OPEN_PAR (table_name | STAR) CLOSE_PAR
 ;
 
 
 literal_value:
       numeric_literal
     | STRING_LITERAL
-    | NULL_
-    | TRUE_
-    | FALSE_
 ;
 
 drop_table_stmt:
-    DROP_ TABLE_ (IF_ EXISTS_)? table_name
+    DROP_ TABLE_ table_name
 ;
 
 insert_stmt:
-    INSERT_ INTO_ table_name (
-        OPEN_PAR list[column_name] CLOSE_PAR
-    )? VALUES_ OPEN_PAR list[literal_value] CLOSE_PAR
+    INSERT_ INTO_ table_name
+    VALUES_ OPEN_PAR list[literal_value] CLOSE_PAR
 ;
 
 result_column:
@@ -106,7 +102,7 @@ result_column:
 ;
 
 select_stmt:
-    SELECT_ (DISTINCT_ | ALL_)? (STAR | list[result_column])
+    SELECT_ (STAR | list[result_column])
     FROM_ list[table_or_subquery]
     (where_expr)?
 ;

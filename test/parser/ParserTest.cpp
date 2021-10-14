@@ -1,8 +1,11 @@
 #include "SQLColumnDefine.h"
 #include "SQLCreateTableStatement.h"
 #include "SQLDropTableStatement.h"
+#include "SQLInsertIntoStatement.h"
+#include "ValuesClause.h"
 #include <gtest/gtest.h>
 #include <iostream>
+#include "spdlog/spdlog.h"
 
 #define protected public
 #define private public
@@ -35,5 +38,25 @@ TEST(Parser, DropTableStatement) {
     ast::SQLDropTableStatement statement = parser.parseDropTableStatement();
     EXPECT_EQ(statement.tableName, "student");
     EXPECT_EQ(statement.ifExists, false);
+}
+TEST(Parser, InsertIntoStatement) {
+    using namespace minidb;
+
+    parser::Lexer  lexer("insert into student values (123, '123', 1.23);");
+    fmt::print("{}\n", lexer.sql);
+
+    for (auto token = lexer.getNextToken();
+         token.tokenType != parser::TokenType::END &&
+         token.tokenType != parser::TokenType::ILLEGAL;
+         token = lexer.getNextToken()) {
+        fmt::print("{:<4} {}\n", token.tokenType, token.val);
+    }
+    parser::Parser parser("insert into student values (123, '123', 1.23);");
+    ast::SQLInsertIntoStatement statement = parser.parseInsertIntoStatement();
+    EXPECT_EQ(statement.tableName, "student");
+    EXPECT_EQ(statement.values,
+              std::vector<ast::ValuesClause>({ ast::ValuesClause(123),
+                                               ast::ValuesClause("123"),
+                                               ast::ValuesClause(1.23) }));
 }
 } // namespace

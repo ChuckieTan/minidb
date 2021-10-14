@@ -4,8 +4,10 @@
 #include "SQLColumnDefine.h"
 #include "SQLCreateTableStatement.h"
 #include "SQLDropTableStatement.h"
+#include "SQLInsertIntoStatement.h"
 #include "SQLTableElement.h"
 #include "TokenType.h"
+#include "ValuesClause.h"
 #include <functional>
 #include <string>
 #include <variant>
@@ -40,8 +42,11 @@ public:
     bool                         match(MatchType condition);
     ast::SQLCreateTableStatement parseCreateTableStatement();
     ast::SQLDropTableStatement   parseDropTableStatement();
+    ast::SQLInsertIntoStatement  parseInsertIntoStatement();
+    ast::ValuesClause            literalValue();
     ast::SQLTableElement         tableElement();
     ast::SQLColumnDefine         columnDefine();
+    ast::ValuesClause numericValue(int sign = 1, Token token = Token());
 
 protected:
     Lexer lexer;
