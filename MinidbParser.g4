@@ -90,7 +90,7 @@ literal_value:
     | FALSE_
 ;
 
-drop_stmt:
+drop_table_stmt:
     DROP_ TABLE_ (IF_ EXISTS_)? table_name
 ;
 

@@ -3,6 +3,7 @@
 #include "Lexer.h"
 #include "SQLColumnDefine.h"
 #include "SQLCreateTableStatement.h"
+#include "SQLDropTableStatement.h"
 #include "SQLTableElement.h"
 #include "TokenType.h"
 #include <functional>
@@ -37,7 +38,8 @@ public:
         std::variant<std::string, TokenType, std::function<bool()>> _data;
     };
     bool                         match(MatchType condition);
-    ast::SQLCreateTableStatement createTableStatement();
+    ast::SQLCreateTableStatement parseCreateTableStatement();
+    ast::SQLDropTableStatement   parseDropTableStatement();
     ast::SQLTableElement         tableElement();
     ast::SQLColumnDefine         columnDefine();
 
