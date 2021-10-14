@@ -1,6 +1,8 @@
 #include "Parser.h"
 #include "Lexer.h"
+#include "SQLColumnDefine.h"
 #include "SQLCreateTableStatement.h"
+#include "Token.h"
 #include "TokenType.h"
 #include <functional>
 #include <initializer_list>
@@ -65,12 +67,15 @@ Parser::Parser(const std::string &_sql)
 
 ast::SQLCreateTableStatement Parser::createTableStatement() {
     ast::SQLCreateTableStatement statement;
-    if(chain({TokenType::CREATE, TokenType::TABLE})) {
+    if (chain({ TokenType::CREATE, TokenType::TABLE })) {
         statement.tableName = tableName();
-        if(match(TokenType::LBRACKET)) {
+        if (match(TokenType::LBRACKET)) {
             do {
                 statement.columnDefineList.push_back(columnDefine());
-            } while(match(TokenType::COMMA));
+            } while (match(TokenType::COMMA));
+        }
+        if (!(match(TokenType::RBRACKET) && match(TokenType::SEMICOLON))) {
+            spdlog::error("expected ')'");
         }
     } else {
         spdlog::error("not a create table statement");
@@ -78,18 +83,34 @@ ast::SQLCreateTableStatement Parser::createTableStatement() {
     return statement;
 }
 
-
-
 std::string Parser::tableName() {
-
+    if (lexer.getCurrentToken().tokenType != TokenType::IDENTIFIER) {
+        spdlog::error("expected a table name");
+        return "";
+    }
+    return lexer.getNextToken().val;
 }
 
 ast::SQLTableElement Parser::tableElement() {
-
 }
 
 ast::SQLColumnDefine Parser::columnDefine() {
+    if (lexer.getCurrentToken().tokenType != TokenType::IDENTIFIER) {
+        spdlog::error("expected a cloumn name");
+    } 
+    ast::SQLColumnDefine define;
+    define.columnName = lexer.getNextToken().val;
+    Token token = lexer.getNextToken();
 
+    if (token.tokenType != TokenType::IDENTIFIER) {
+        spdlog::error("expected a cloumn name");
+    } else if (token.val != "int" && token.val != "float" &&
+               token.val != "text") {
+        spdlog::error("invalid column datatype: {}", token.val);
+    } else {
+        define.setColumnType(token.val);
+    }
+    return define;
 }
 
 bool Parser::match(MatchType condition) {
@@ -135,4 +156,4 @@ bool Parser::tree(std::initializer_list<MatchType> args) {
     return false;
 }
 
-} // namespace minidb
+} // namespace minidb::parser
