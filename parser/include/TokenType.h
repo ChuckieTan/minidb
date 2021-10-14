@@ -6,6 +6,7 @@ enum class TokenType {
     TABLE,
     INSERT,
     INTO,
+    VALUES,
     DELETE,
     DROP,
     SELECT,
@@ -42,12 +43,12 @@ enum class TokenType {
     ILLEGAL,          // illegal token
     END,              // end of SQL
 
-    DOT,              // .
-    BETWEEN,          // between
-    DISTINCT,         // distinct
-    DIV,              // /
-    MOD,              // %
-    ASSIGN,           // =
-    ALL,              // all
+    DOT,      // .
+    BETWEEN,  // between
+    DISTINCT, // distinct
+    DIV,      // /
+    MOD,      // %
+    ASSIGN,   // =
+    ALL,      // all
 };
 }
