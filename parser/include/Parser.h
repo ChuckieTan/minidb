@@ -1,12 +1,15 @@
 #pragma once
 
 #include "Lexer.h"
+#include "SQLColumnAssign.h"
 #include "SQLColumnDefine.h"
 #include "SQLCreateTableStatement.h"
+#include "SQLDeleteStatement.h"
 #include "SQLDropTableStatement.h"
 #include "SQLExpr.h"
 #include "SQLInsertIntoStatement.h"
 #include "SQLSelectStatement.h"
+#include "SQLUpdateStatement.h"
 #include "SQLWhereStatement.h"
 #include "TokenType.h"
 #include <functional>
@@ -47,6 +50,9 @@ public:
     ast::SQLExpr                 parseExpr();
     ast::SQLWhereStatement       parseWhere();
     ast::SQLSelectStatement      parseSelectStatement();
+    ast::SQLUpdateStatement      parseUpdateStatement();
+    
+    ast::SQLColumnAssign         columnAssign();
     std::string                  columnName();
     TokenType                    comparisonOperator();
     ast::SQLExprValue            exprValue();

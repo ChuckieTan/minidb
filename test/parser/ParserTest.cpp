@@ -4,6 +4,7 @@
 #include "SQLExpr.h"
 #include "SQLExprValue.h"
 #include "SQLInsertIntoStatement.h"
+#include "SQLUpdateStatement.h"
 #include "spdlog/spdlog.h"
 #include <gtest/gtest.h>
 #include <iostream>
@@ -80,9 +81,9 @@ TEST(Parser, SelectStatement) {
     fmt::print("parse {}\n", lexer.sql);
 
     parser::Parser parser(lexer.sql);
-    auto statement = parser.parseSelectStatement();
+    auto           statement = parser.parseSelectStatement();
 
-    EXPECT_EQ(statement.resultList, std::vector<std::string>{"*"});
+    EXPECT_EQ(statement.resultList, std::vector<std::string>{ "*" });
     EXPECT_EQ(statement.tableSource, "student");
     EXPECT_EQ(statement.isWhereExists, true);
 
@@ -92,7 +93,8 @@ TEST(Parser, SelectStatement) {
     EXPECT_EQ(statement.where.expr.rValue.getIntValue(), 123);
     EXPECT_EQ(statement.where.expr.rValue.isInt(), true);
 
-    lexer = parser::Lexer("select id, name, number from student where id = 123;");
+    lexer =
+        parser::Lexer("select id, name, number from student where id = 123;");
     fmt::print("parse {}\n", lexer.sql);
 
     for (auto token = lexer.getNextToken();
@@ -101,13 +103,37 @@ TEST(Parser, SelectStatement) {
          token = lexer.getNextToken()) {
         fmt::print("{:<4} {}\n", token.tokenType, token.val);
     }
-    
-    parser = parser::Parser(lexer.sql);
+
+    parser    = parser::Parser(lexer.sql);
     statement = parser.parseSelectStatement();
 
-    EXPECT_EQ(statement.resultList, std::vector<std::string>({ "id", "name", "number" }));
+    EXPECT_EQ(statement.resultList,
+              std::vector<std::string>({ "id", "name", "number" }));
     EXPECT_EQ(statement.tableSource, "student");
     EXPECT_EQ(statement.isWhereExists, true);
+
+    EXPECT_EQ(statement.where.expr.lValue.getColumnValue(), "id");
+    EXPECT_EQ(statement.where.expr.lValue.isColumn(), true);
+    EXPECT_EQ(statement.where.expr.op, parser::TokenType::ASSIGN);
+    EXPECT_EQ(statement.where.expr.rValue.getIntValue(), 123);
+    EXPECT_EQ(statement.where.expr.rValue.isInt(), true);
+}
+
+TEST(Parser, UpdateStatement) {
+    using namespace minidb;
+
+    parser::Lexer lexer(
+        "update student set number = 1, name = 'asd' where id = 123;");
+    fmt::print("parse: {}\n", lexer.sql);
+
+    parser::Parser          parser(lexer.sql);
+    ast::SQLUpdateStatement statement = parser.parseUpdateStatement();
+    EXPECT_EQ(statement.tableSource, "student");
+    EXPECT_EQ(statement.columnAssign[ 0 ].columnName, "number");
+    EXPECT_EQ(statement.columnAssign[ 1 ].columnName, "name");
+
+    EXPECT_EQ(statement.columnAssign[ 0 ].value, ast::SQLExprValue(1));
+    EXPECT_EQ(statement.columnAssign[ 1 ].value, ast::SQLExprValue("asd"));
 
     EXPECT_EQ(statement.where.expr.lValue.getColumnValue(), "id");
     EXPECT_EQ(statement.where.expr.lValue.isColumn(), true);

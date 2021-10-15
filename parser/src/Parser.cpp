@@ -1,5 +1,6 @@
 #include "Parser.h"
 #include "Lexer.h"
+#include "SQLColumnAssign.h"
 #include "SQLColumnDefine.h"
 #include "SQLCreateTableStatement.h"
 #include "SQLDropTableStatement.h"
@@ -7,6 +8,7 @@
 #include "SQLExprValue.h"
 #include "SQLInsertIntoStatement.h"
 #include "SQLSelectStatement.h"
+#include "SQLUpdateStatement.h"
 #include "SQLWhereStatement.h"
 #include "Token.h"
 #include "TokenType.h"
@@ -159,6 +161,57 @@ ast::SQLSelectStatement Parser::parseSelectStatement() {
         spdlog::error("not a select statement");
     }
     return statement;
+}
+
+ast::SQLUpdateStatement Parser::parseUpdateStatement() {
+    ast::SQLUpdateStatement statement;
+    if (match(TokenType::UPDATE)) {
+        if (auto token = lexer.getNextToken();
+            token.tokenType == TokenType::IDENTIFIER) {
+            statement.tableSource = token.val;
+        } else {
+            spdlog::error("expected a table name, given '{}'", token.val);
+        }
+
+        if (auto token = lexer.getCurrentToken(); !match(TokenType::SET)) {
+            spdlog::error("expected keyword set, given '{}'", token.val);
+        }
+
+        do {
+            statement.columnAssign.push_back(columnAssign());
+        } while (match(TokenType::COMMA));
+
+        if (auto token = lexer.getCurrentToken();
+            token.tokenType == TokenType::WHERE) {
+            statement.where         = parseWhere();
+            statement.isWhereExists = true;
+        } else {
+            statement.isWhereExists = false;
+        }
+
+        if (!chain({ TokenType::SEMICOLON, TokenType::END })) {
+            spdlog::error("expected a table semicolon in the end");
+        }
+    } else {
+        spdlog::error("not a update statement");
+    }
+    return statement;
+}
+
+ast::SQLColumnAssign Parser::columnAssign() {
+    ast::SQLColumnAssign columnAssign;
+    if (auto token = lexer.getCurrentToken(); match(TokenType::IDENTIFIER)) {
+        columnAssign.columnName = token.val;
+    } else {
+        spdlog::error("expected a column name, given '{}'", token.val);
+    }
+
+    if (auto token = lexer.getCurrentToken(); !match(TokenType::ASSIGN)) {
+        spdlog::error("expected '=', given '{}'", token.val);
+    }
+
+    columnAssign.value = exprValue();
+    return columnAssign;
 }
 
 std::string Parser::columnName() {
