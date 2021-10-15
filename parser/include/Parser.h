@@ -51,6 +51,7 @@ public:
     ast::SQLWhereStatement       parseWhere();
     ast::SQLSelectStatement      parseSelectStatement();
     ast::SQLUpdateStatement      parseUpdateStatement();
+    ast::SQLDeleteStatement      parseDeleteStatement();
     
     ast::SQLColumnAssign         columnAssign();
     std::string                  columnName();

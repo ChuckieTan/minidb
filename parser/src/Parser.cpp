@@ -3,6 +3,7 @@
 #include "SQLColumnAssign.h"
 #include "SQLColumnDefine.h"
 #include "SQLCreateTableStatement.h"
+#include "SQLDeleteStatement.h"
 #include "SQLDropTableStatement.h"
 #include "SQLExpr.h"
 #include "SQLExprValue.h"
@@ -194,6 +195,33 @@ ast::SQLUpdateStatement Parser::parseUpdateStatement() {
         }
     } else {
         spdlog::error("not a update statement");
+    }
+    return statement;
+}
+
+ast::SQLDeleteStatement Parser::parseDeleteStatement() {
+    ast::SQLDeleteStatement statement;
+    if (chain({ TokenType::DELETE, TokenType::FROM })) {
+        if (auto token = lexer.getCurrentToken();
+            match(TokenType::IDENTIFIER)) {
+            statement.tableSource = token.val;
+        } else {
+            spdlog::error("expected a table name, given '{}'", token.val);
+        }
+
+        if (auto token = lexer.getCurrentToken();
+            token.tokenType == TokenType::WHERE) {
+            statement.where         = parseWhere();
+            statement.isWhereExists = true;
+        } else {
+            statement.isWhereExists = false;
+        }
+
+        if (!chain({ TokenType::SEMICOLON, TokenType::END })) {
+            spdlog::error("expected a table semicolon in the end");
+        }
+    } else {
+        spdlog::error("not a delete statement");
     }
     return statement;
 }
