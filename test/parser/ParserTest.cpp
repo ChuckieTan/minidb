@@ -1,5 +1,6 @@
 #include "SQLColumnDefine.h"
 #include "SQLCreateTableStatement.h"
+#include "SQLDeleteStatement.h"
 #include "SQLDropTableStatement.h"
 #include "SQLExpr.h"
 #include "SQLExprValue.h"
@@ -140,5 +141,22 @@ TEST(Parser, UpdateStatement) {
     EXPECT_EQ(statement.where.expr.op, parser::TokenType::ASSIGN);
     EXPECT_EQ(statement.where.expr.rValue.getIntValue(), 123);
     EXPECT_EQ(statement.where.expr.rValue.isInt(), true);
+}
+
+TEST(Parser, DeleteStatement) {
+    using namespace minidb;
+
+    parser::Lexer lexer(
+        "delete from student where id >= '123';");
+    fmt::print("parse: {}\n", lexer.sql);
+
+    parser::Parser          parser(lexer.sql);
+    ast::SQLDeleteStatement statement = parser.parseDeleteStatement();
+
+    EXPECT_EQ(statement.where.expr.lValue.getColumnValue(), "id");
+    EXPECT_EQ(statement.where.expr.lValue.isColumn(), true);
+    EXPECT_EQ(statement.where.expr.op, parser::TokenType::GREATER_OR_EQUAL);
+    EXPECT_EQ(statement.where.expr.rValue.getStringValue(), "123");
+    EXPECT_EQ(statement.where.expr.rValue.isString(), true);
 }
 } // namespace

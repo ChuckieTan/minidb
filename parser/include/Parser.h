@@ -51,14 +51,15 @@ public:
     ast::SQLWhereStatement       parseWhere();
     ast::SQLSelectStatement      parseSelectStatement();
     ast::SQLUpdateStatement      parseUpdateStatement();
-    
-    ast::SQLColumnAssign         columnAssign();
-    std::string                  columnName();
-    TokenType                    comparisonOperator();
-    ast::SQLExprValue            exprValue();
-    ast::SQLExprValue            literalValue();
-    ast::SQLColumnDefine         columnDefine();
-    ast::SQLExprValue numericValue(int sign = 1, Token token = Token());
+    ast::SQLDeleteStatement      parseDeleteStatement();
+
+    ast::SQLColumnAssign columnAssign();
+    std::string          columnName();
+    TokenType            comparisonOperator();
+    ast::SQLExprValue    exprValue();
+    ast::SQLExprValue    literalValue();
+    ast::SQLColumnDefine columnDefine();
+    ast::SQLExprValue    numericValue(int sign = 1, Token token = Token());
 
 protected:
     Lexer lexer;
