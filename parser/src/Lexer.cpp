@@ -1,6 +1,7 @@
 #include "Lexer.h"
 #include "Token.h"
 #include "TokenType.h"
+#include "spdlog/fmt/bundled/core.h"
 #include <algorithm>
 #include <cctype>
 #include <map>
@@ -155,6 +156,7 @@ Token Lexer::getNextToken() {
 
 Token Lexer::getCurrentToken() {
     if (tokenPos < tokenSequence.size()) {
+        fmt::print("get current token: {}\n", tokenSequence[ tokenPos ].val);
         return tokenSequence[ tokenPos ];
     } else {
         return Token(TokenType::END);

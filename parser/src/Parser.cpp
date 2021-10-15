@@ -6,8 +6,10 @@
 #include "SQLExpr.h"
 #include "SQLExprValue.h"
 #include "SQLInsertIntoStatement.h"
+#include "SQLWhereStatement.h"
 #include "Token.h"
 #include "TokenType.h"
+#include "spdlog/fmt/bundled/core.h"
 #include <functional>
 #include <initializer_list>
 #include <iostream>
@@ -119,7 +121,38 @@ ast::SQLInsertIntoStatement Parser::parseInsertIntoStatement() {
     return statement;
 }
 
-ast::SQLExpr Parser::parseExpr() {}
+ast::SQLExpr Parser::parseExpr() {
+    auto         token = lexer.getCurrentToken();
+    ast::SQLExpr expr;
+    expr.lValue = exprValue();
+    expr.op     = comparisonOperator();
+    expr.rValue = exprValue();
+    return expr;
+}
+
+ast::SQLWhereStatement Parser::parseWhere() {
+    ast::SQLWhereStatement statement;
+    if(auto token = lexer.getNextToken(); token.tokenType == TokenType::WHERE) {
+        statement.expr = parseExpr();
+        statement.isEmpty = false;
+    } else {
+        statement.isEmpty = true;
+    }
+    return statement;
+}
+
+TokenType Parser::comparisonOperator() {
+    if (auto token = lexer.getCurrentToken();
+        tree({ TokenType::LESS, TokenType::LESS_OR_EQUAL, TokenType::ASSIGN,
+               TokenType::EQUAL, TokenType::NOT_EQUAL, TokenType::GREATER,
+               TokenType::GREATER_OR_EQUAL })) {
+        return token.tokenType;
+    } else {
+        spdlog::error("given '{}'", lexer.getCurrentToken().tokenType);
+        spdlog::error("expexted a comparison operator, given '{}'", token.val);
+        return TokenType::ILLEGAL;
+    }
+}
 
 ast::SQLExprValue Parser::exprValue() {
     auto              token = lexer.getNextToken();
@@ -128,7 +161,8 @@ ast::SQLExprValue Parser::exprValue() {
     if (token.tokenType == TokenType::STRING) {
         value = ast::SQLExprValue(token.val);
     } else if (token.tokenType == TokenType::IDENTIFIER) {
-        value = ast::SQLExprValue();
+        value =
+            ast::SQLExprValue(token.val, ast::SQLExprValue::DataType::COLUMN);
     } else if (token.tokenType == TokenType::PLUS) {
         sign  = 1;
         value = numericValue(sign);
@@ -235,8 +269,13 @@ bool Parser::many(std::initializer_list<MatchType> args) {
 }
 
 bool Parser::tree(std::initializer_list<MatchType> args) {
+    auto savePoint = lexer.mark();
     for (const auto &condition : args) {
-        if (match(condition)) { return true; }
+        if (match(condition)) {
+            return true;
+        } else {
+            lexer.reset(savePoint);
+        }
     }
     return false;
 }

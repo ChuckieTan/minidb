@@ -1,6 +1,7 @@
 #include "SQLColumnDefine.h"
 #include "SQLCreateTableStatement.h"
 #include "SQLDropTableStatement.h"
+#include "SQLExpr.h"
 #include "SQLExprValue.h"
 #include "SQLInsertIntoStatement.h"
 #include "spdlog/spdlog.h"
@@ -31,6 +32,7 @@ TEST(Parser, CreateTableStatement) {
               ast::SQLColumnDefine("address",
                                    ast::SQLColumnDefine::ColumnType::TEXT) }));
 }
+
 TEST(Parser, DropTableStatement) {
     using namespace minidb;
 
@@ -39,18 +41,13 @@ TEST(Parser, DropTableStatement) {
     EXPECT_EQ(statement.tableName, "student");
     EXPECT_EQ(statement.ifExists, false);
 }
+
 TEST(Parser, InsertIntoStatement) {
     using namespace minidb;
 
     parser::Lexer lexer("insert into student values (123, '123', 1.23);");
-    fmt::print("{}\n", lexer.sql);
+    fmt::print("parse: {}\n", lexer.sql);
 
-    for (auto token = lexer.getNextToken();
-         token.tokenType != parser::TokenType::END &&
-         token.tokenType != parser::TokenType::ILLEGAL;
-         token = lexer.getNextToken()) {
-        fmt::print("{:<4} {}\n", token.tokenType, token.val);
-    }
     parser::Parser parser("insert into student values (123, '123', -1.23);");
     ast::SQLInsertIntoStatement statement = parser.parseInsertIntoStatement();
     EXPECT_EQ(statement.tableName, "student");
@@ -58,5 +55,21 @@ TEST(Parser, InsertIntoStatement) {
               std::vector<ast::SQLExprValue>({ ast::SQLExprValue(123),
                                                ast::SQLExprValue("123"),
                                                ast::SQLExprValue(-1.23) }));
+}
+
+TEST(Parser, SQLExpr) {
+    using namespace minidb;
+
+    parser::Lexer lexer("id = 123");
+    fmt::print("parse {}\n", lexer.sql);
+
+    parser::Parser parser(lexer.sql);
+    ast::SQLExpr statement = parser.parseExpr();
+
+    EXPECT_EQ(statement.lValue.getColumnValue(), "id");
+    EXPECT_EQ(statement.lValue.isColumn(), true);
+    EXPECT_EQ(statement.op, parser::TokenType::ASSIGN);
+    EXPECT_EQ(statement.rValue.getIntValue(), 123);
+    EXPECT_EQ(statement.rValue.isInt(), true);
 }
 } // namespace

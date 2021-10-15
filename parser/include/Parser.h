@@ -6,6 +6,7 @@
 #include "SQLDropTableStatement.h"
 #include "SQLExpr.h"
 #include "SQLInsertIntoStatement.h"
+#include "SQLWhereStatement.h"
 #include "TokenType.h"
 #include <functional>
 #include <string>
@@ -43,6 +44,8 @@ public:
     ast::SQLDropTableStatement   parseDropTableStatement();
     ast::SQLInsertIntoStatement  parseInsertIntoStatement();
     ast::SQLExpr                 parseExpr();
+    ast::SQLWhereStatement       parseWhere();
+    TokenType                    comparisonOperator();
     ast::SQLExprValue            exprValue();
     ast::SQLExprValue            literalValue();
     ast::SQLColumnDefine         columnDefine();
