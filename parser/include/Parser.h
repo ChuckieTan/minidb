@@ -4,10 +4,9 @@
 #include "SQLColumnDefine.h"
 #include "SQLCreateTableStatement.h"
 #include "SQLDropTableStatement.h"
+#include "SQLExpr.h"
 #include "SQLInsertIntoStatement.h"
-#include "SQLTableElement.h"
 #include "TokenType.h"
-#include "ValuesClause.h"
 #include <functional>
 #include <string>
 #include <variant>
@@ -43,10 +42,11 @@ public:
     ast::SQLCreateTableStatement parseCreateTableStatement();
     ast::SQLDropTableStatement   parseDropTableStatement();
     ast::SQLInsertIntoStatement  parseInsertIntoStatement();
-    ast::ValuesClause            literalValue();
-    ast::SQLTableElement         tableElement();
+    ast::SQLExpr                 parseExpr();
+    ast::SQLExprValue            exprValue();
+    ast::SQLExprValue            literalValue();
     ast::SQLColumnDefine         columnDefine();
-    ast::ValuesClause numericValue(int sign = 1, Token token = Token());
+    ast::SQLExprValue numericValue(int sign = 1, Token token = Token());
 
 protected:
     Lexer lexer;

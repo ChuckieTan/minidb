@@ -1,7 +1,6 @@
 #pragma once
 
 #include "SQLColumnDefine.h"
-#include "SQLTableElement.h"
 #include <string>
 #include <vector>
 

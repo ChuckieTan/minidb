@@ -3,10 +3,11 @@
 #include "SQLColumnDefine.h"
 #include "SQLCreateTableStatement.h"
 #include "SQLDropTableStatement.h"
+#include "SQLExpr.h"
+#include "SQLExprValue.h"
 #include "SQLInsertIntoStatement.h"
 #include "Token.h"
 #include "TokenType.h"
-#include "ValuesClause.h"
 #include <functional>
 #include <initializer_list>
 #include <iostream>
@@ -118,32 +119,52 @@ ast::SQLInsertIntoStatement Parser::parseInsertIntoStatement() {
     return statement;
 }
 
-ast::ValuesClause Parser::numericValue(int sign, Token token) {
-    if(token.tokenType == TokenType::ILLEGAL) {
-        token = lexer.getNextToken();
+ast::SQLExpr Parser::parseExpr() {}
+
+ast::SQLExprValue Parser::exprValue() {
+    auto              token = lexer.getNextToken();
+    int               sign  = 1;
+    ast::SQLExprValue value;
+    if (token.tokenType == TokenType::STRING) {
+        value = ast::SQLExprValue(token.val);
+    } else if (token.tokenType == TokenType::IDENTIFIER) {
+        value = ast::SQLExprValue();
+    } else if (token.tokenType == TokenType::PLUS) {
+        sign  = 1;
+        value = numericValue(sign);
+    } else if (token.tokenType == TokenType::MINUS) {
+        sign  = -1;
+        value = numericValue(sign);
+    } else {
+        value = numericValue(1, token);
     }
-    ast::ValuesClause value;
+    return value;
+}
+
+ast::SQLExprValue Parser::numericValue(int sign, Token token) {
+    if (token.tokenType == TokenType::ILLEGAL) { token = lexer.getNextToken(); }
+    ast::SQLExprValue value;
     if (token.tokenType == TokenType::INTEGER) {
-        value = ast::ValuesClause(sign * std::stoi(token.val));
+        value = ast::SQLExprValue(sign * std::stoi(token.val));
     } else if (token.tokenType == TokenType::FLOAT) {
-        value = ast::ValuesClause(sign * std::stod(token.val));
+        value = ast::SQLExprValue(sign * std::stod(token.val));
     } else {
         spdlog::error("expected a value, given '{}'", token.val);
     }
     return value;
 }
 
-ast::ValuesClause Parser::literalValue() {
+ast::SQLExprValue Parser::literalValue() {
     auto              token = lexer.getNextToken();
     int               sign  = 1;
-    ast::ValuesClause value;
+    ast::SQLExprValue value;
     if (token.tokenType == TokenType::STRING) {
-        value = ast::ValuesClause(token.val);
+        value = ast::SQLExprValue(token.val);
     } else if (token.tokenType == TokenType::PLUS) {
-        sign = 1;
+        sign  = 1;
         value = numericValue(sign);
     } else if (token.tokenType == TokenType::MINUS) {
-        sign = -1;
+        sign  = -1;
         value = numericValue(sign);
     } else {
         value = numericValue(1, token);
@@ -158,8 +179,6 @@ std::string Parser::tableName() {
     }
     return lexer.getNextToken().val;
 }
-
-ast::SQLTableElement Parser::tableElement() {}
 
 ast::SQLColumnDefine Parser::columnDefine() {
     if (lexer.getCurrentToken().tokenType != TokenType::IDENTIFIER) {
