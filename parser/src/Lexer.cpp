@@ -156,7 +156,6 @@ Token Lexer::getNextToken() {
 
 Token Lexer::getCurrentToken() {
     if (tokenPos < tokenSequence.size()) {
-        fmt::print("get current token: {}\n", tokenSequence[ tokenPos ].val);
         return tokenSequence[ tokenPos ];
     } else {
         return Token(TokenType::END);

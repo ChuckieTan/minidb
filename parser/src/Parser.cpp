@@ -6,6 +6,7 @@
 #include "SQLExpr.h"
 #include "SQLExprValue.h"
 #include "SQLInsertIntoStatement.h"
+#include "SQLSelectStatement.h"
 #include "SQLWhereStatement.h"
 #include "Token.h"
 #include "TokenType.h"
@@ -121,6 +122,54 @@ ast::SQLInsertIntoStatement Parser::parseInsertIntoStatement() {
     return statement;
 }
 
+ast::SQLSelectStatement Parser::parseSelectStatement() {
+    ast::SQLSelectStatement statement;
+    if (match(TokenType::SELECT)) {
+        if (match(TokenType::STAR)) {
+            statement.resultList.push_back("*");
+        } else {
+            do {
+                statement.resultList.push_back(columnName());
+            } while (match(TokenType::COMMA));
+        }
+
+        if (auto token = lexer.getCurrentToken(); !match(TokenType::FROM)) {
+            spdlog::error("expected a from, given '{}'", token.val);
+        }
+
+        if (auto token = lexer.getCurrentToken();
+            match(TokenType::IDENTIFIER)) {
+            statement.tableSource = token.val;
+        } else {
+            spdlog::error("expected a table source, given '{}'", token.val);
+        }
+
+        if (auto token = lexer.getCurrentToken();
+            token.tokenType == TokenType::WHERE) {
+            statement.where         = parseWhere();
+            statement.isWhereExists = true;
+        } else {
+            statement.isWhereExists = false;
+        }
+
+        if (!chain({ TokenType::SEMICOLON, TokenType::END })) {
+            spdlog::error("expected a table semicolon in the end");
+        }
+    } else {
+        spdlog::error("not a select statement");
+    }
+    return statement;
+}
+
+std::string Parser::columnName() {
+    if (auto token = lexer.getCurrentToken(); match(TokenType::IDENTIFIER)) {
+        return token.val;
+    } else {
+        spdlog::error("expected a column name, given '{}'", token.val);
+        return "";
+    }
+}
+
 ast::SQLExpr Parser::parseExpr() {
     auto         token = lexer.getCurrentToken();
     ast::SQLExpr expr;
@@ -132,11 +181,11 @@ ast::SQLExpr Parser::parseExpr() {
 
 ast::SQLWhereStatement Parser::parseWhere() {
     ast::SQLWhereStatement statement;
-    if(auto token = lexer.getNextToken(); token.tokenType == TokenType::WHERE) {
+    if (auto token = lexer.getNextToken();
+        token.tokenType == TokenType::WHERE) {
         statement.expr = parseExpr();
-        statement.isEmpty = false;
     } else {
-        statement.isEmpty = true;
+        spdlog::error("expected a where, given '{}'", token.val);
     }
     return statement;
 }
@@ -236,15 +285,16 @@ ast::SQLColumnDefine Parser::columnDefine() {
 
 bool Parser::match(MatchType condition) {
     auto savePoint = lexer.mark();
+    bool res       = false;
     if (condition.isToken()) {
-        return lexer.getNextToken().tokenType == condition.getToken();
+        res = lexer.getNextToken().tokenType == condition.getToken();
     } else if (condition.isFunc()) {
-        return condition.getFunc()();
+        res = condition.getFunc()();
     } else if (condition.isString()) {
-        return lexer.getNextToken().val == condition.getString();
+        res = lexer.getNextToken().val == condition.getString();
     }
-    lexer.reset(savePoint);
-    return false;
+    if (!res) { lexer.reset(savePoint); }
+    return res;
 }
 
 bool Parser::chain(std::initializer_list<MatchType> args) {

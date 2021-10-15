@@ -64,12 +64,55 @@ TEST(Parser, SQLExpr) {
     fmt::print("parse {}\n", lexer.sql);
 
     parser::Parser parser(lexer.sql);
-    ast::SQLExpr statement = parser.parseExpr();
+    ast::SQLExpr   statement = parser.parseExpr();
 
     EXPECT_EQ(statement.lValue.getColumnValue(), "id");
     EXPECT_EQ(statement.lValue.isColumn(), true);
     EXPECT_EQ(statement.op, parser::TokenType::ASSIGN);
     EXPECT_EQ(statement.rValue.getIntValue(), 123);
     EXPECT_EQ(statement.rValue.isInt(), true);
+}
+
+TEST(Parser, SelectStatement) {
+    using namespace minidb;
+
+    parser::Lexer lexer("select * from student where id = 123;");
+    fmt::print("parse {}\n", lexer.sql);
+
+    parser::Parser parser(lexer.sql);
+    auto statement = parser.parseSelectStatement();
+
+    EXPECT_EQ(statement.resultList, std::vector<std::string>{"*"});
+    EXPECT_EQ(statement.tableSource, "student");
+    EXPECT_EQ(statement.isWhereExists, true);
+
+    EXPECT_EQ(statement.where.expr.lValue.getColumnValue(), "id");
+    EXPECT_EQ(statement.where.expr.lValue.isColumn(), true);
+    EXPECT_EQ(statement.where.expr.op, parser::TokenType::ASSIGN);
+    EXPECT_EQ(statement.where.expr.rValue.getIntValue(), 123);
+    EXPECT_EQ(statement.where.expr.rValue.isInt(), true);
+
+    lexer = parser::Lexer("select id, name, number from student where id = 123;");
+    fmt::print("parse {}\n", lexer.sql);
+
+    for (auto token = lexer.getNextToken();
+         token.tokenType != parser::TokenType::END &&
+         token.tokenType != parser::TokenType::ILLEGAL;
+         token = lexer.getNextToken()) {
+        fmt::print("{:<4} {}\n", token.tokenType, token.val);
+    }
+    
+    parser = parser::Parser(lexer.sql);
+    statement = parser.parseSelectStatement();
+
+    EXPECT_EQ(statement.resultList, std::vector<std::string>({ "id", "name", "number" }));
+    EXPECT_EQ(statement.tableSource, "student");
+    EXPECT_EQ(statement.isWhereExists, true);
+
+    EXPECT_EQ(statement.where.expr.lValue.getColumnValue(), "id");
+    EXPECT_EQ(statement.where.expr.lValue.isColumn(), true);
+    EXPECT_EQ(statement.where.expr.op, parser::TokenType::ASSIGN);
+    EXPECT_EQ(statement.where.expr.rValue.getIntValue(), 123);
+    EXPECT_EQ(statement.where.expr.rValue.isInt(), true);
 }
 } // namespace
