@@ -81,6 +81,7 @@ std::unordered_map<std::string, TokenType> Lexer::keywordTokenType = {
     { "create", TokenType::CREATE },   { "table", TokenType::TABLE },
     { "insert", TokenType::INSERT },   { "into", TokenType::INTO },
     { "values", TokenType::VALUES },   { "delete", TokenType::DELETE },
+    { "update", TokenType::UPDATE },   { "set", TokenType::SET },
     { "drop", TokenType::DROP },       { "select", TokenType::SELECT },
     { "from", TokenType::FROM },       { "where", TokenType::WHERE },
     { "and", TokenType::AND },         { "or", TokenType::OR },

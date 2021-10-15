@@ -8,6 +8,8 @@ enum class TokenType {
     INTO,
     VALUES,
     DELETE,
+    UPDATE,
+    SET,
     DROP,
     SELECT,
     FROM,
