@@ -18,6 +18,7 @@ add_subdirectory(util)
 add_subdirectory(parser)
 add_subdirectory(ast)
 add_subdirectory(storage)
+add_subdirectory(operate)
 
 add_executable(minidb main.cpp)
 
@@ -27,6 +28,7 @@ target_link_libraries(minidb PRIVATE
     minidb::parser
     minidb::ast
     minidb::storage
+    minidb::operate
 )
 
 option(PACKAGE_TESTS "Build the tests" ON)
