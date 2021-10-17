@@ -13,28 +13,53 @@ Pager::Pager(const std::string &_fileName, bool _isInMemory = true)
             std::fstream(_fileName, std::fstream::in | std::fstream::app |
                                         std::fstream::binary);
     }
-    // readBuffer = new char[ 4096 ];
-    // writeBuffer = new char[ 4096 ];
 }
 
-int Pager::write(const char *data, std::int32_t size) {
-    dataFile.seekp(0, dataFile.end);
-    int addr = dataFile.tellp();
-    dataFile.write((char *)&size, sizeof(size));
+Pager::~Pager() { dataFile.close(); }
+
+std::uint32_t Pager::writeRow(const char *data, std::uint32_t size,
+                              std::uint32_t pos) {
+    std::uint32_t addr = 0;
+    if (pos == 0) {
+        dataFile.seekp(0, dataFile.end);
+        addr = dataFile.tellp();
+        dataFile.write((char *) &size, sizeof(size));
+        dataFile.write(data, size);
+    } else {
+        dataFile.seekp(pos, dataFile.beg);
+        addr = dataFile.tellp();
+        dataFile.write((char *) &size, sizeof(size));
+        dataFile.write(data, size);
+    }
+    return addr;
+}
+
+std::uint32_t Pager::write(const char *data, std::uint32_t size,
+                           std::uint32_t pos) {
+    std::uint32_t addr = 0;
+    dataFile.seekp(pos, dataFile.beg);
+    addr = dataFile.tellp();
     dataFile.write(data, size);
     return addr;
 }
 
-std::int32_t Pager::getSize(std::int32_t pos) {
-    std::int32_t size;
+std::uint32_t Pager::write_back(const char *data, std::uint32_t size) {
+    std::uint32_t addr = 0;
+    dataFile.seekp(0, dataFile.end);
+    addr = dataFile.tellp();
+    dataFile.write(data, size);
+    return addr;
+}
+
+std::uint32_t Pager::getRowSize(std::uint32_t pos) {
+    std::uint32_t size;
     dataFile.seekg(pos, dataFile.beg);
     dataFile.read((char *) &size, sizeof(size));
     return size;
 }
 
-bool Pager::read(std::int32_t pos, char *data, std::int32_t size) {
-    dataFile.seekg(0, dataFile.end);
-    if (pos <= dataFile.tellg()) {
+bool Pager::read(std::uint32_t pos, char *data, std::uint32_t size) {
+    if (pos <= getFileSize()) {
         dataFile.seekg(pos, dataFile.beg);
         dataFile.read(data, size);
         return true;
@@ -42,5 +67,26 @@ bool Pager::read(std::int32_t pos, char *data, std::int32_t size) {
         spdlog::error("read file out of file size");
         return false;
     }
+}
+
+bool Pager::readRow(std::uint32_t pos, char *data) {
+    if (pos <= getFileSize()) {
+        std::uint32_t size;
+        dataFile.seekg(pos, dataFile.beg);
+        dataFile.read((char*)&size, sizeof(size));
+        dataFile.read(data, size);
+        return true;
+    } else {
+        spdlog::error("read file out of file size");
+        return false;
+    }
+}
+
+std::uint32_t Pager::getFileSize() {
+    // auto mark = dataFile.tellg();
+    dataFile.seekg(0, dataFile.end);
+    auto ans = dataFile.tellg();
+    // dataFile.seekg(mark, dataFile.beg);
+    return ans;
 }
 } // namespace minidb::storage

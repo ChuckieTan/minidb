@@ -1,30 +1,30 @@
 #pragma once
 
-#include <c++/10/bits/c++config.h>
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
-#include <sstream>
 #include <string>
-#include <vector>
 
 namespace minidb::storage {
 
 class Pager {
 public:
     Pager(const std::string &_fileName, bool _isInMemory);
+    ~Pager();
 
-    int write(const char *data, std::int32_t size);
+    std::uint32_t writeRow(const char *data, std::uint32_t size,
+                           std::uint32_t pos = 0);
 
-    std::int32_t     getSize(std::int32_t pos);
-    bool             read(std::int32_t pos, char *data, std::int32_t size);
+    std::uint32_t write(const char *data, std::uint32_t size,
+                        std::uint32_t pos);
 
-    // char *        readBuffer;
-    // char *        writeBuffer;
-    // std::uint32_t readBufferPos;
+    std::uint32_t write_back(const char *data, std::uint32_t size);
+    std::uint32_t getRowSize(std::uint32_t pos);
+    bool          read(std::uint32_t pos, char *data, std::uint32_t size);
+    bool          readRow(std::uint32_t pos, char *data);
 
-    bool                isInMemory;
-    // std::vector<char *> inMemoryData;
-    std::fstream        dataFile;
+    std::uint32_t getFileSize();
+    bool          isInMemory;
+    std::fstream  dataFile;
 };
 } // namespace minidb::storage
