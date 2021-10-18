@@ -45,7 +45,7 @@ bool BPlusTree::search_in_tree(std::int32_t key) {
 storage::SQLBinaryData BPlusTree::search(std::int32_t key) {
     search_in_tree(key);
 
-    auto addr = currentNode->get_entry(key);
+    auto                   addr = currentNode->get_entry(key);
     storage::SQLBinaryData data{ nullptr, 0 };
     if (addr != 0) {
         data = pager.readRow(addr);
@@ -56,24 +56,76 @@ storage::SQLBinaryData BPlusTree::search(std::int32_t key) {
 }
 
 bool BPlusTree::insert(std::int32_t key, SQLBinaryData data) {
+    bool res = false;
+
     search_in_tree(key);
-    auto pos = std::lower_bound(currentNode->keys.begin(),
-                                currentNode->keys.end(), key) -
-               currentNode->keys.begin();
-    if (pos < order && currentNode->keys[ pos ] == key) {
-        spdlog::error("already exists key: {}", key);
-        return false;
-    }
     auto addr = pager.writeRow(data);
-    currentNode->keys.insert(currentNode->keys.begin() + pos, key);
-    currentNode->childrenOrValue.insert(
-        currentNode->childrenOrValue.begin() + pos, addr);
-    currentNode->len++;
+    if (currentNode->can_add_entry()) {
+        res = currentNode->insert_entry(key, addr);
+    } else {
+        currentNode->insert_entry(key, addr);
+        res = split_node();
+    }
+    return res;
+}
+
+bool BPlusTree::split_node() {
+    if (currentNode->isLeaf() && currentNode->addr == root) {
+        auto new_root     = new BPlusTreeNode(pager);
+        new_root->parent  = 0;
+        new_root->_isLeaf = false;
+        new_root->len     = 0;
+        new_root->dump();
+        currentNode->parent = new_root->addr;
+        changeRoot(new_root->addr);
+        delete new_root;
+    }
+    auto parent      = currentNode->parent;
+    auto new_node    = new BPlusTreeNode(pager);
+    new_node->parent = parent;
+
+    // 复制一半元素
+    for (int i = order / 2; i < currentNode->len; i++) {
+        new_node->keys[ i - order / 2 ] = currentNode->keys[ i ];
+        new_node->childrenOrValue[ i - order / 2 ] =
+            currentNode->childrenOrValue[ i ];
+    }
+    new_node->len    = currentNode->len - order;
+    currentNode->len = order / 2;
+
+    new_node->_isLeaf = true;
+
+    // 下一个叶子节点
+    new_node->nextLeaf = currentNode->nextLeaf;
+    // 新节点的磁盘地址得 dump 后才知道
+    new_node->dump();
+    currentNode->nextLeaf = new_node->addr;
+    currentNode->dump();
+
+    // 如果当前节点不是叶子节点，还需要更新新节点的子节点的父节点
+    if (!currentNode->isLeaf()) {
+        for (int i = 0; i < new_node->len; i++) {
+            auto addr = new_node->childrenOrValue[ i ];
+            pager.write({ (char *) &new_node->addr, sizeof(new_node->addr) },
+                        addr);
+        }
+    }
+    currentNode->load(parent);
+    //* currentNode 现在为 parent
+    bool res = false;
+    if (currentNode->can_add_entry()) {
+        res = currentNode->insert_entry(new_node->keys[ 0 ], new_node->addr);
+    } else {
+        res = currentNode->insert_entry(new_node->keys[ 0 ], new_node->addr);
+        // 分裂父节点
+        res = res && split_node();
+    }
+    return res;
 }
 
 std::uint32_t BPlusTree::createNode() {
     auto data = new char[ 4096 ];
-    auto addr = pager.write_back({data, sizeof(data)});
+    auto addr = pager.write_back({ data, sizeof(data) });
     delete[] data;
     return addr;
 }

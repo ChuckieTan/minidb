@@ -1,6 +1,9 @@
 #include "BPlusTreeNode.h"
 #include "Pager.h"
 
+#include <algorithm>
+#include <spdlog/spdlog.h>
+
 namespace minidb::storage {
 
 BPlusTreeNode::BPlusTreeNode(Pager &_pager)
@@ -86,6 +89,29 @@ bool BPlusTreeNode::dump(std::uint32_t _addr) {
     pager.write({ (char *) &(nextLeaf), sizeof(nextLeaf) }, currentAddr);
     currentAddr += sizeof(nextLeaf);
     return true;
+}
+
+bool BPlusTreeNode::can_add_entry() const { return len <= order - 2; }
+
+bool BPlusTreeNode::insert_entry(std::int32_t key, std::uint32_t value) {
+    auto pos =
+        std::lower_bound(keys.begin(), keys.begin() + len, key) - keys.begin();
+    if (pos < order && keys[ pos ] == key) {
+        spdlog::error("already exists key: {}", key);
+        return false;
+    }
+
+    keys.insert(keys.begin() + pos, key);
+    childrenOrValue.insert(childrenOrValue.begin() + pos, addr);
+    len++;
+    return true;
+}
+
+std::uint32_t BPlusTreeNode::get_entry(std::int32_t key) {
+    auto pos =
+        std::lower_bound(keys.begin(), keys.begin() + len, key) - keys.begin();
+    if (pos < len && keys[ pos ] == key) { return childrenOrValue[ pos ]; }
+    return 0;
 }
 
 } // namespace minidb::storage

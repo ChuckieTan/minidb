@@ -26,7 +26,7 @@ public:
     std::uint32_t addr;
 
     bool          can_add_entry() const;
-    bool          insert_entry();
+    bool          insert_entry(std::int32_t key, std::uint32_t value);
     std::uint32_t get_entry(std::int32_t key);
 
     bool load(std::uint32_t addr);

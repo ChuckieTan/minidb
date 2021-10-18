@@ -40,8 +40,7 @@ public:
     bool             changeRoot(std::uint32_t addr);
     static const int order = 256;
 
-    std::uint32_t split_leaf();
-    std::uint32_t split_parent();
+    bool split_node();
 
 private:
     Pager          pager;
