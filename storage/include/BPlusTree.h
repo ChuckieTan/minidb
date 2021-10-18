@@ -16,7 +16,7 @@ public:
               std::uint32_t _root);
     ~BPlusTree();
 
-    bool insert(std::int32_t key, char *data, std::size_t dataSize);
+    bool insert(std::int32_t key, operate::SQLBinaryData);
     bool remove(std::int32_t key);
 
     /**
