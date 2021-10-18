@@ -18,44 +18,42 @@ Pager::Pager(const std::string &_fileName, bool _isInMemory = true)
 
 Pager::~Pager() { dataFile.close(); }
 
-std::uint32_t Pager::writeRow(const char *data, std::uint32_t size,
-                              std::uint32_t pos) {
+std::uint32_t Pager::writeRow(SQLBinaryData data, std::uint32_t pos) {
     std::uint32_t addr = 0;
     if (pos == 0) {
         dataFile.seekp(0, dataFile.end);
         addr = dataFile.tellp();
-        dataFile.write((char *) &size, sizeof(size));
-        dataFile.write(data, size);
+        dataFile.write((char *) &data.size, sizeof(data.size));
+        dataFile.write(data.data, data.size);
     } else {
         dataFile.seekp(pos, dataFile.beg);
         addr = dataFile.tellp();
-        dataFile.write((char *) &size, sizeof(size));
-        dataFile.write(data, size);
+        dataFile.write((char *) &data.size, sizeof(data.size));
+        dataFile.write(data.data, data.size);
     }
     return addr;
 }
 
-std::uint32_t Pager::write(const char *data, std::uint32_t size,
-                           std::uint32_t pos) {
+std::uint32_t Pager::write(SQLBinaryData data, std::uint32_t pos) {
     std::uint32_t addr = 0;
     dataFile.seekp(pos, dataFile.beg);
     addr = dataFile.tellp();
-    dataFile.write(data, size);
+    dataFile.write(data.data, data.size);
     return addr;
 }
 
-std::uint32_t Pager::write_back(const char *data, std::uint32_t size) {
+std::uint32_t Pager::write_back(SQLBinaryData data) {
     std::uint32_t addr = 0;
     dataFile.seekp(0, dataFile.end);
     addr = dataFile.tellp();
-    dataFile.write(data, size);
+    dataFile.write(data.data, data.size);
     return addr;
 }
 
-bool Pager::read(std::uint32_t pos, char *data, std::uint32_t size) {
+bool Pager::read(SQLBinaryData data, std::uint32_t pos) {
     if (pos <= getFileSize()) {
         dataFile.seekg(pos, dataFile.beg);
-        dataFile.read(data, size);
+        dataFile.read(data.data, data.size);
         return true;
     } else {
         spdlog::error("read file out of file size");

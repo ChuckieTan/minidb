@@ -7,7 +7,8 @@
 
 namespace minidb::operate {
 
-SQLBinaryData BiaryOperate::dumps(const std::vector<ast::SQLExprValue> &values) {
+storage::SQLBinaryData
+    BiaryOperate::dumps(const std::vector<ast::SQLExprValue> &values) {
     // 计算数据大小
     std::uint32_t size = 0;
     for (const auto &value : values) {
@@ -62,13 +63,13 @@ SQLBinaryData BiaryOperate::dumps(const std::vector<ast::SQLExprValue> &values) 
         }
     }
 
-    SQLBinaryData res;
+    storage::SQLBinaryData res;
     res.data = data;
     res.size = size;
     return res;
 };
 
-std::vector<ast::SQLExprValue> BiaryOperate::loads(SQLBinaryData data) {
+std::vector<ast::SQLExprValue> BiaryOperate::loads(storage::SQLBinaryData data) {
     std::vector<ast::SQLExprValue> res;
 
     std::uint32_t currentOffset = 0;

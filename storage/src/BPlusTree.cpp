@@ -55,7 +55,7 @@ storage::SQLBinaryData BPlusTree::search(std::int32_t key) {
     return data;
 }
 
-bool BPlusTree::insert(std::int32_t key, SQLBinaryData) {
+bool BPlusTree::insert(std::int32_t key, SQLBinaryData data) {
     search_in_tree(key);
     auto pos = std::lower_bound(currentNode->keys.begin(),
                                 currentNode->keys.end(), key) -
@@ -64,7 +64,7 @@ bool BPlusTree::insert(std::int32_t key, SQLBinaryData) {
         spdlog::error("already exists key: {}", key);
         return false;
     }
-    auto addr = pager.writeRow(data, dataSize);
+    auto addr = pager.writeRow(data);
     currentNode->keys.insert(currentNode->keys.begin() + pos, key);
     currentNode->childrenOrValue.insert(
         currentNode->childrenOrValue.begin() + pos, addr);
@@ -73,7 +73,7 @@ bool BPlusTree::insert(std::int32_t key, SQLBinaryData) {
 
 std::uint32_t BPlusTree::createNode() {
     auto data = new char[ 4096 ];
-    auto addr = pager.write_back(data, sizeof(data));
+    auto addr = pager.write_back({data, sizeof(data)});
     delete[] data;
     return addr;
 }
