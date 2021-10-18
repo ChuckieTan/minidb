@@ -5,6 +5,8 @@
 #include <fstream>
 #include <string>
 
+#include "SQLBinaryData.h"
+
 namespace minidb::storage {
 
 class Pager {
@@ -19,9 +21,9 @@ public:
                         std::uint32_t pos);
 
     std::uint32_t write_back(const char *data, std::uint32_t size);
-    std::uint32_t getRowSize(std::uint32_t pos);
+    
     bool          read(std::uint32_t pos, char *data, std::uint32_t size);
-    bool          readRow(std::uint32_t pos, char *data);
+    operate::SQLBinaryData readRow(std::uint32_t pos);
 
     std::uint32_t getFileSize();
     bool          isInMemory;

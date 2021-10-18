@@ -1,4 +1,5 @@
 #include "Pager.h"
+#include "SQLBinaryData.h"
 #include "spdlog/spdlog.h"
 #include <c++/10/bits/c++config.h>
 #include <fstream>
@@ -51,13 +52,6 @@ std::uint32_t Pager::write_back(const char *data, std::uint32_t size) {
     return addr;
 }
 
-std::uint32_t Pager::getRowSize(std::uint32_t pos) {
-    std::uint32_t size;
-    dataFile.seekg(pos, dataFile.beg);
-    dataFile.read((char *) &size, sizeof(size));
-    return size;
-}
-
 bool Pager::read(std::uint32_t pos, char *data, std::uint32_t size) {
     if (pos <= getFileSize()) {
         dataFile.seekg(pos, dataFile.beg);
@@ -69,16 +63,17 @@ bool Pager::read(std::uint32_t pos, char *data, std::uint32_t size) {
     }
 }
 
-bool Pager::readRow(std::uint32_t pos, char *data) {
+operate::SQLBinaryData Pager::readRow(std::uint32_t pos) {
     if (pos <= getFileSize()) {
         std::uint32_t size;
         dataFile.seekg(pos, dataFile.beg);
-        dataFile.read((char*)&size, sizeof(size));
+        dataFile.read((char *) &size, sizeof(size));
+        auto data = new char[ size ];
         dataFile.read(data, size);
-        return true;
+        return { data, size };
     } else {
         spdlog::error("read file out of file size");
-        return false;
+        return { nullptr, 0 };
     }
 }
 
