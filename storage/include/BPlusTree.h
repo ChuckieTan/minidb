@@ -16,16 +16,6 @@ public:
               std::uint32_t _root);
     ~BPlusTree();
 
-    bool loadNode(std::uint32_t addr);
-    
-    /**
-     * @brief 将 currentNode 写入 currentNodeAddr 所指的磁盘位置中
-     *
-     * @return true 写入成功
-     * @return false 写入失败
-     */
-    bool dumpNode();
-
     bool insert(std::int32_t key, char *data, std::size_t dataSize);
     bool remove(std::int32_t key);
 
@@ -44,16 +34,18 @@ public:
      * @return true 定位成功
      * @return false 查找失败
      */
-    bool searchNode(std::int32_t key);
+    bool search_in_tree(std::int32_t key);
 
     std::uint32_t    createNode();
     bool             changeRoot(std::uint32_t addr);
     static const int order = 256;
 
+    std::uint32_t split_leaf();
+    std::uint32_t split_parent();
+
 private:
     Pager          pager;
     BPlusTreeNode *currentNode;
-    std::uint32_t  currentNodeAddr;
     std::uint32_t  root;
 };
 } // namespace minidb::storage

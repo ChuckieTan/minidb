@@ -9,7 +9,7 @@ namespace minidb::storage {
 
 class BPlusTreeNode {
 public:
-    BPlusTreeNode();
+    BPlusTreeNode(Pager &_pager);
     bool isLeaf() const;
 
     static const int order = 256;
@@ -22,6 +22,14 @@ public:
     bool          _isLeaf;
     std::uint32_t nextLeaf;
 
-    bool loads(std::uint32_t addr, Pager &pager);
+    Pager &       pager;
+    std::uint32_t addr;
+
+    bool          can_add_entry() const;
+    bool          insert_entry();
+    std::uint32_t get_entry(std::int32_t key);
+
+    bool load(std::uint32_t addr);
+    bool dump(std::uint32_t _addr = 0);
 };
 } // namespace minidb::storage
