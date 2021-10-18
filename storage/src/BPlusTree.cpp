@@ -42,11 +42,11 @@ bool BPlusTree::search_in_tree(std::int32_t key) {
     return true;
 }
 
-operate::SQLBinaryData BPlusTree::search(std::int32_t key) {
+storage::SQLBinaryData BPlusTree::search(std::int32_t key) {
     search_in_tree(key);
 
     auto addr = currentNode->get_entry(key);
-    operate::SQLBinaryData data{ nullptr, 0 };
+    storage::SQLBinaryData data{ nullptr, 0 };
     if (addr != 0) {
         data = pager.readRow(addr);
     } else {
@@ -55,7 +55,7 @@ operate::SQLBinaryData BPlusTree::search(std::int32_t key) {
     return data;
 }
 
-bool BPlusTree::insert(std::int32_t key, operate::SQLBinaryData) {
+bool BPlusTree::insert(std::int32_t key, SQLBinaryData) {
     search_in_tree(key);
     auto pos = std::lower_bound(currentNode->keys.begin(),
                                 currentNode->keys.end(), key) -

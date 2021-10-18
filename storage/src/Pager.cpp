@@ -63,7 +63,7 @@ bool Pager::read(std::uint32_t pos, char *data, std::uint32_t size) {
     }
 }
 
-operate::SQLBinaryData Pager::readRow(std::uint32_t pos) {
+storage::SQLBinaryData Pager::readRow(std::uint32_t pos) {
     if (pos <= getFileSize()) {
         std::uint32_t size;
         dataFile.seekg(pos, dataFile.beg);

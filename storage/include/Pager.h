@@ -23,7 +23,7 @@ public:
     std::uint32_t write_back(const char *data, std::uint32_t size);
     
     bool          read(std::uint32_t pos, char *data, std::uint32_t size);
-    operate::SQLBinaryData readRow(std::uint32_t pos);
+    storage::SQLBinaryData readRow(std::uint32_t pos);
 
     std::uint32_t getFileSize();
     bool          isInMemory;

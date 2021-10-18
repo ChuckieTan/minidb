@@ -32,17 +32,17 @@ int main(int argc, char *argv[]) {
     //     fmt::print("{:<4} {}\n", token.tokenType, token.val);
     // }
  
-    storage::Pager pager("student.db", false);
-    std::int32_t pos = pager.write("123", sizeof("123"));
-    std::int32_t size = pager.getSize(pos);
-    fmt::print("{} {}\n", pos, size);
-    std::vector<char> buffer(size);
-    pager.read(pos + sizeof(size), buffer.data(), size);
-    std::string str;
-    str.insert(str.begin(), buffer.begin(), buffer.end());
-    for(auto ch: buffer) {
-        fmt::print("{}\n", ch);
-    }
-    std::cout << str << " " << "success\n";
+    // storage::Pager pager("student.db", false);
+    // std::int32_t pos = pager.write("123", sizeof("123"));
+    // std::int32_t size = pager.getSize(pos);
+    // fmt::print("{} {}\n", pos, size);
+    // std::vector<char> buffer(size);
+    // pager.read(pos + sizeof(size), buffer.data(), size);
+    // std::string str;
+    // str.insert(str.begin(), buffer.begin(), buffer.end());
+    // for(auto ch: buffer) {
+    //     fmt::print("{}\n", ch);
+    // }
+    // std::cout << str << " " << "success\n";
     return 0;
 }

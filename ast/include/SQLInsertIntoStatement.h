@@ -9,8 +9,8 @@ namespace minidb::ast {
 
 class SQLInsertIntoStatement {
 public:
-    std::string tableName;
-    std::vector<std::string> cloumns;
+    std::string               tableName;
+    std::vector<std::string>  cloumns;
     std::vector<SQLExprValue> values;
 };
-}
+} // namespace minidb::ast

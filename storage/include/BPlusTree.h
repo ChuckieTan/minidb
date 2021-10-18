@@ -16,16 +16,16 @@ public:
               std::uint32_t _root);
     ~BPlusTree();
 
-    bool insert(std::int32_t key, operate::SQLBinaryData);
+    bool insert(std::int32_t key, SQLBinaryData);
     bool remove(std::int32_t key);
 
     /**
      * @brief 返回 key 所对应的数据的字节流
      *
      * @param key
-     * @return operate::SQLBinaryData key对应的字节流及其长度
+     * @return storage::SQLBinaryData key对应的字节流及其长度
      */
-    operate::SQLBinaryData search(std::int32_t key);
+    storage::SQLBinaryData search(std::int32_t key);
 
     /**
      * @brief 定位 currentNode 到 key 所应该在的节点

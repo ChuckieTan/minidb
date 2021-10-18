@@ -3,12 +3,12 @@
 #include <cstdint>
 #include <new>
 
-namespace minidb::operate {
+namespace minidb::storage {
 
 class SQLBinaryData {
 public:
-    char *       data;
-    std::int32_t size;
+    char *        data;
+    std::uint32_t size;
 };
 
 const std::int8_t DATA_INT    = 0;
