@@ -1,7 +1,10 @@
 #pragma once
 
 #include "Pager.h"
+#include "SQLCreateTableStatement.h"
+#include "table_info.h"
 #include <cstdint>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -9,26 +12,28 @@ namespace minidb::storage {
 
 class Storage {
 public:
-    struct TablePos {
-        std::string  tableName;
-        std::int32_t pos;
-
-        TablePos(const std::string &_tableName, std::int32_t _pos);
-    };
-
     Storage(const std::string &_fileName, bool _isInMemory);
 
-    std::vector<TablePos> tablePosList;
-    Pager                 pager;
+    Pager                  pager;
+    std::vector<TableInfo> table_info_list;
 
-    std::uint32_t getTablePos();
-    std::uint32_t createNewTable();
-    std::uint32_t newPageBlock();
+    bool       scan_tables();
+    TableInfo  scan_table(std::uint32_t &current_addr);
+    ColumnInfo scan_column(std::uint32_t &current_addr);
 
-    std::uint32_t              tableNum;
-    static const std::uint32_t pageSize         = 4096;
-    static const std::uint32_t tableNumAddr     = 7;
-    static const std::uint32_t tableDefineBegin = 11;
-    std::uint32_t              tableDefineEnd   = 0;
+    bool new_table(const ast::SQLCreateTableStatement &creat_statement);
+    bool write_column_define(const ast::SQLColumnDefine &column_define,
+                             std::uint32_t &             current_addr);
+    /**
+     * @brief 写入指定大小的二进制数据，同时使current_addr往后移动
+     */
+    bool write_binary(const void *data, std::uint32_t size,
+                      std::uint32_t &current_addr);
+
+    std::uint32_t              table_num;
+    static const std::uint32_t pageSize           = 4096;
+    static const std::uint32_t tableNumAddr       = 7;
+    static const std::uint32_t table_define_begin = 11;
+    std::uint32_t              table_define_end   = 0;
 };
 } // namespace minidb::storage
