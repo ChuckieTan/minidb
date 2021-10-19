@@ -91,8 +91,8 @@ ast::SQLDropTableStatement Parser::parseDropTableStatement() {
             statement.ifExists = false;
         }
         statement.tableName = tableName();
-        if (!chain({ TokenType::RBRACKET, TokenType::SEMICOLON })) {
-            spdlog::error("expected ')' or ';'");
+        if (!chain({ TokenType::SEMICOLON })) {
+            spdlog::error("expected ';'");
         }
     } else {
         spdlog::error("not a drop table statement");
