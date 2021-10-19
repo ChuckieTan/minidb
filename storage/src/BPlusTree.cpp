@@ -2,6 +2,7 @@
 #include "BPlusTreeNode.h"
 #include "Pager.h"
 #include "SQLBinaryData.h"
+#include "Storage.h"
 #include "spdlog/spdlog.h"
 #include <algorithm>
 #include <cstdint>
@@ -9,11 +10,13 @@
 #include <utility>
 namespace minidb::storage {
 
-BPlusTree::BPlusTree(const std::string &_fileName, bool _isInMemory,
-                     std::uint32_t _root)
-    : pager(_fileName, _isInMemory)
-    , currentNode(new BPlusTreeNode(pager))
-    , root(_root) {
+BPlusTree::BPlusTree(std::uint32_t _root, Pager &_pager, Storage &_storage,
+                     const std::string &_table_name)
+    : currentNode(new BPlusTreeNode(pager))
+    , root_addr(_root)
+    , pager(_pager)
+    , storage(_storage)
+    , table_name(_table_name) {
     if (_root == 0) {
         // 如果树为空
         spdlog::info("root node doesn't exist, create a new root node");
@@ -32,7 +35,7 @@ BPlusTree::BPlusTree(const std::string &_fileName, bool _isInMemory,
 BPlusTree::~BPlusTree() { delete currentNode; }
 
 bool BPlusTree::search_in_tree(std::int32_t key) {
-    currentNode->load(root);
+    currentNode->load(root_addr);
     while (!currentNode->_isLeaf) {
         auto addr = std::lower_bound(currentNode->keys.begin(),
                                      currentNode->keys.end(), key) -
@@ -70,7 +73,7 @@ bool BPlusTree::insert(std::int32_t key, SQLBinaryData data) {
 }
 
 bool BPlusTree::split_node() {
-    if (currentNode->isLeaf() && currentNode->addr == root) {
+    if (currentNode->isLeaf() && currentNode->addr == root_addr) {
         auto new_root     = new BPlusTreeNode(pager);
         new_root->parent  = 0;
         new_root->_isLeaf = false;
@@ -128,6 +131,15 @@ std::uint32_t BPlusTree::createNode() {
     auto addr = pager.write_back({ data, sizeof(data) });
     delete[] data;
     return addr;
+}
+
+bool BPlusTree::changeRoot(std::uint32_t addr) {
+    auto &table_info       = storage.table_info_map[ table_name ];
+    auto  root_define_addr = table_info.table_root_define_addr;
+    table_info.root_addr   = addr;
+    pager.write({ (char *) &addr, sizeof(addr) }, root_define_addr);
+    root_addr = addr;
+    return true;
 }
 
 } // namespace minidb::storage

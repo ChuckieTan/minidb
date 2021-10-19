@@ -87,7 +87,7 @@ bool Storage::scan_tables() {
     for (std::uint32_t i = 0; i < table_num; i++) {
         TableInfo table_info = scan_table(current_addr);
         spdlog::info("scan table {}", table_info.tableName);
-        table_info_list.push_back(table_info);
+        table_info_map[table_info.tableName] = table_info;
     }
     table_define_end = current_addr;
     return true;
@@ -116,6 +116,8 @@ TableInfo Storage::scan_table(std::uint32_t &current_addr) {
                      tableNameSeq.end());
     current_addr += tableNameSize;
 
+    // 获取存储表的根节点的地址
+    table_info.table_root_define_addr = current_addr;
     // 获取表的首个节点地址
     std::uint32_t tableAddr;
     pager.read({ (char *) &tableAddr, sizeof(tableAddr) }, current_addr);

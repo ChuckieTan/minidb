@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <iostream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace minidb::storage {
@@ -14,8 +15,8 @@ class Storage {
 public:
     Storage(const std::string &_fileName, bool _isInMemory);
 
-    Pager                  pager;
-    std::vector<TableInfo> table_info_list;
+    Pager                                      pager;
+    std::unordered_map<std::string, TableInfo> table_info_map;
 
     bool       scan_tables();
     TableInfo  scan_table(std::uint32_t &current_addr);

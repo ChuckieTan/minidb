@@ -88,10 +88,10 @@ storage::SQLBinaryData Pager::readRow(std::uint32_t pos) {
 std::uint32_t Pager::getFileSize() {
     // auto mark = dataFile.tellg();
     dataFile.seekg(0, dataFile.beg);
-    int beg = dataFile.tellg();
+    std::uint32_t beg = dataFile.tellg();
 
     dataFile.seekg(0, dataFile.end);
-    int ed = dataFile.tellg();
+    std::uint32_t ed = dataFile.tellg();
     // dataFile.seekg(mark, dataFile.beg);
     return ed - beg;
 }
