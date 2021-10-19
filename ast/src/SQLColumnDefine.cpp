@@ -15,6 +15,14 @@ bool SQLColumnDefine::operator==(const SQLColumnDefine &define) const {
     return columnName == define.columnName && columnType == define.columnType;
 }
 
+bool SQLColumnDefine::is_int() const { return columnType == ColumnType::INT; }
+
+bool SQLColumnDefine::is_float() const {
+    return columnType == ColumnType::FLOAT;
+}
+
+bool SQLColumnDefine::is_text() const { return columnType == ColumnType::TEXT; }
+
 SQLColumnDefine::SQLColumnDefine(std::string &&_columnName,
                                  ColumnType    _columnType)
     : columnName(_columnName)

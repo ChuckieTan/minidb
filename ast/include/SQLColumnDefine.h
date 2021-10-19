@@ -15,6 +15,10 @@ public:
     SQLColumnDefine(const std::string &_columnName, ColumnType _columnType);
     SQLColumnDefine(std::string &&_columnName, ColumnType _columnType);
 
+    bool is_int() const;
+    bool is_float() const;
+    bool is_text() const;
+
     bool operator==(const SQLColumnDefine &define) const;
     void setColumnType(const std::string &str) { columnType = typeMap[ str ]; }
 };
