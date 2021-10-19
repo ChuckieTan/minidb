@@ -24,7 +24,7 @@ public:
     ColumnInfo scan_column(std::uint32_t &current_addr);
 
     bool new_table(const ast::SQLCreateTableStatement &creat_statement);
-    bool write_column_define(const ast::SQLColumnDefine &column_define,
+    ColumnInfo write_column_define(const ast::SQLColumnDefine &column_define,
                              std::uint32_t &             current_addr);
     /**
      * @brief 写入指定大小的二进制数据，同时使current_addr往后移动

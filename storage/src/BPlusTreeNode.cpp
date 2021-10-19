@@ -91,6 +91,10 @@ bool BPlusTreeNode::dump(std::uint32_t _addr) {
     return true;
 }
 
+bool BPlusTreeNode::isLeaf() const {
+    return _isLeaf;
+}
+
 bool BPlusTreeNode::can_add_entry() const { return len <= order - 2; }
 
 bool BPlusTreeNode::insert_entry(std::int32_t key, std::uint32_t value) {

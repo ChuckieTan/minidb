@@ -91,6 +91,13 @@ bool Storage::scan_tables() {
         TableInfo table_info = scan_table(current_addr);
         spdlog::info("scan table {}", table_info.tableName);
         table_info_map[ table_info.tableName ] = table_info;
+
+        // 生成B+树
+        // 只能在添加到 table_info_map 后才能生成，
+        // 因为生成新树需要修改 table_info_map
+        table_info_map[ table_info.tableName ].b_plus_tree =
+            std::make_shared<BPlusTree>(table_info.root_addr, pager, *this,
+                                        table_info.tableName);
     }
     table_define_end = current_addr;
     return true;
@@ -140,10 +147,6 @@ TableInfo Storage::scan_table(std::uint32_t &current_addr) {
     table_info.tableName = tableName;
     table_info.root_addr = tableAddr;
 
-    // 生成B+树
-    table_info.b_plus_tree = std::make_shared<BPlusTree>(
-        table_info.root_addr, pager, *this, table_info.tableName);
-
     return table_info;
 }
 
@@ -182,6 +185,8 @@ bool Storage::write_binary(const void *data, std::uint32_t size,
 }
 
 bool Storage::new_table(const ast::SQLCreateTableStatement &creat_statement) {
+    TableInfo table_info;
+
     // 先不写 table define 的长度
     std::uint32_t current_addr = table_define_end + 4;
 
@@ -193,6 +198,9 @@ bool Storage::new_table(const ast::SQLCreateTableStatement &creat_statement) {
     // 写入 table name
     write_binary(table_name.c_str(), table_name.size() + 1, current_addr);
 
+    // 写入存储root_addr的地址
+    table_info.table_root_define_addr = current_addr;
+
     // 写入 table root 节点地址
     std::uint32_t table_root_addr = 0;
     write_binary(&table_root_addr, sizeof(table_root_addr), current_addr);
@@ -201,9 +209,11 @@ bool Storage::new_table(const ast::SQLCreateTableStatement &creat_statement) {
     std::uint32_t column_num = creat_statement.columnDefineList.size();
     write_binary(&column_num, sizeof(column_num), current_addr);
 
+    // 写入所有列，并且放入当前table列表中
     for (std::uint32_t i = 0; i < column_num; i++) {
-        write_column_define(creat_statement.columnDefineList[ i ],
-                            current_addr);
+        auto column_info = write_column_define(
+            creat_statement.columnDefineList[ i ], current_addr);
+        table_info.columns.push_back(column_info);
     }
 
     // 写入 table define 的长度
@@ -215,12 +225,23 @@ bool Storage::new_table(const ast::SQLCreateTableStatement &creat_statement) {
     // 更新 table_define_end
     write_binary(&table_define_end, sizeof(table_define_end), current_addr);
 
+    table_info.root_addr         = table_root_addr;
+    table_info.tableName         = table_name;
+    table_info_map[ table_name ] = table_info;
+
+    // 生成B+树
+    // 只能在添加到 table_info_map 后才能生成，
+    // 因为生成新树需要修改 table_info_map
+    table_info_map[ table_name ].b_plus_tree = std::make_shared<BPlusTree>(
+        table_info.root_addr, pager, *this, table_info.tableName);
+
     spdlog::info("create a new table: {}", table_name);
     return true;
 }
 
-bool Storage::write_column_define(const ast::SQLColumnDefine &column_define,
-                                  std::uint32_t &             current_addr) {
+ColumnInfo
+    Storage::write_column_define(const ast::SQLColumnDefine &column_define,
+                                 std::uint32_t &             current_addr) {
     // 写入 column type
     std::uint8_t column_type = 0;
     if (column_define.is_int()) {
@@ -239,7 +260,11 @@ bool Storage::write_column_define(const ast::SQLColumnDefine &column_define,
     // 写入列名
     write_binary(column_define.columnName.c_str(), column_name_size,
                  current_addr);
-    return true;
+
+    ColumnInfo column_info;
+    column_info.column_name = column_define.columnName;
+    column_info.column_type = column_type;
+    return column_info;
 }
 
 } // namespace minidb::storage
