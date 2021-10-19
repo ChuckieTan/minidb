@@ -1,10 +1,12 @@
 #include "Storage.h"
+#include "BPlusTree.h"
 #include "Pager.h"
 #include "SQLColumnDefine.h"
 #include "spdlog/spdlog.h"
 #include "table_info.h"
 #include <cstdint>
 #include <cstring>
+#include <memory>
 #include <string>
 
 namespace minidb::storage {
@@ -49,7 +51,7 @@ Storage::Storage(const std::string &_fileName, bool _isInMemory)
 
         // 写入 tableNum
         pager.write({ (char *) &table_num, sizeof(table_num) }, current_addr);
-    } else if(file_size >= 11) {
+    } else if (file_size >= 11) {
         std::uint32_t current_addr = 0;
 
         // 判断文件开头是否有 Minidb 标识
@@ -74,8 +76,9 @@ Storage::Storage(const std::string &_fileName, bool _isInMemory)
                    15);
         current_addr += sizeof(table_define_end);
 
-        // 扫描所有表的信息
+        // 扫描所有表的信息，并生成其对应的B+树
         scan_tables();
+
     } else {
         spdlog::error("{} is not a Minidb database file", _fileName);
     }
@@ -87,7 +90,7 @@ bool Storage::scan_tables() {
     for (std::uint32_t i = 0; i < table_num; i++) {
         TableInfo table_info = scan_table(current_addr);
         spdlog::info("scan table {}", table_info.tableName);
-        table_info_map[table_info.tableName] = table_info;
+        table_info_map[ table_info.tableName ] = table_info;
     }
     table_define_end = current_addr;
     return true;
@@ -136,6 +139,10 @@ TableInfo Storage::scan_table(std::uint32_t &current_addr) {
 
     table_info.tableName = tableName;
     table_info.root_addr = tableAddr;
+
+    // 生成B+树
+    table_info.b_plus_tree = std::make_shared<BPlusTree>(
+        table_info.root_addr, pager, *this, table_info.tableName);
 
     return table_info;
 }

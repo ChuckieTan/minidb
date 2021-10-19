@@ -19,7 +19,9 @@ BPlusTree::BPlusTree(std::uint32_t _root, Pager &_pager, Storage &_storage,
     , table_name(_table_name) {
     if (_root == 0) {
         // 如果树为空
-        spdlog::info("root node doesn't exist, create a new root node");
+        spdlog::info(
+            "table: {} root node doesn't exist, create a new root node",
+            table_name);
 
         auto addr = createNode();
         changeRoot(addr);

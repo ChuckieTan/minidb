@@ -1,6 +1,8 @@
 #pragma once
 
+#include "BPlusTree.h"
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -14,9 +16,10 @@ struct ColumnInfo {
 };
 
 struct TableInfo {
-    std::string             tableName;
-    std::uint32_t           table_root_define_addr;
-    std::uint32_t           root_addr;
-    std::vector<ColumnInfo> columns;
+    std::string                tableName;
+    std::uint32_t              table_root_define_addr;
+    std::uint32_t              root_addr;
+    std::shared_ptr<BPlusTree> b_plus_tree;
+    std::vector<ColumnInfo>    columns;
 };
 } // namespace minidb::storage

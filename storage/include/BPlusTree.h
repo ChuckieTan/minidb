@@ -8,9 +8,11 @@
 #include "BPlusTreeNode.h"
 #include "Pager.h"
 #include "SQLBinaryData.h"
-#include "Storage.h"
 
 namespace minidb::storage {
+
+// Storage 前置声明， 解决循环依赖
+class Storage;
 
 class BPlusTree {
 public:

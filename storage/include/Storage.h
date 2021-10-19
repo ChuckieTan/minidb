@@ -15,7 +15,8 @@ class Storage {
 public:
     Storage(const std::string &_fileName, bool _isInMemory);
 
-    Pager                                      pager;
+    Pager pager;
+
     std::unordered_map<std::string, TableInfo> table_info_map;
 
     bool       scan_tables();
