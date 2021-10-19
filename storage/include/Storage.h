@@ -33,7 +33,7 @@ public:
     std::uint32_t              table_num;
     static const std::uint32_t pageSize           = 4096;
     static const std::uint32_t tableNumAddr       = 7;
-    static const std::uint32_t table_define_begin = 11;
+    std::uint32_t              table_define_begin = 11;
     std::uint32_t              table_define_end   = 0;
 };
 } // namespace minidb::storage

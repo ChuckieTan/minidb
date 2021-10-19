@@ -31,9 +31,10 @@ static char tag[ 7 ] = "Minidb";
 // 0: int(4B), 1: float(8B), 2: string(4B + ...)
 Storage::Storage(const std::string &_fileName, bool _isInMemory)
     : pager(_fileName, _isInMemory) {
-    if (pager.getFileSize() == 0) {
+    auto file_size = pager.getFileSize();
+    if (file_size == 0) {
         // 写入 4KB 作为 Metadata
-        char *head = new char[ pageSize ];
+        char *head = new char[ pageSize ]{ 0 };
         pager.write({ head, pageSize }, 0);
         delete[] head;
 
@@ -48,7 +49,7 @@ Storage::Storage(const std::string &_fileName, bool _isInMemory)
 
         // 写入 tableNum
         pager.write({ (char *) &table_num, sizeof(table_num) }, current_addr);
-    } else {
+    } else if(file_size >= 11) {
         std::uint32_t current_addr = 0;
 
         // 判断文件开头是否有 Minidb 标识
@@ -75,6 +76,8 @@ Storage::Storage(const std::string &_fileName, bool _isInMemory)
 
         // 扫描所有表的信息
         scan_tables();
+    } else {
+        spdlog::error("{} is not a Minidb database file", _fileName);
     }
 }
 
@@ -190,7 +193,8 @@ bool Storage::new_table(const ast::SQLCreateTableStatement &creat_statement) {
     write_binary(&column_num, sizeof(column_num), current_addr);
 
     for (std::uint32_t i = 0; i < column_num; i++) {
-        write_column_define(creat_statement.columnDefineList[i], current_addr);
+        write_column_define(creat_statement.columnDefineList[ i ],
+                            current_addr);
     }
 
     // 写入 table define 的长度
@@ -224,7 +228,8 @@ bool Storage::write_column_define(const ast::SQLColumnDefine &column_define,
     write_binary(&column_name_size, sizeof(column_name_size), current_addr);
 
     // 写入列名
-    write_binary(column_define.columnName.c_str(), column_name_size, current_addr);
+    write_binary(column_define.columnName.c_str(), column_name_size,
+                 current_addr);
     return true;
 }
 

@@ -3,6 +3,7 @@
 #include "spdlog/spdlog.h"
 #include <c++/10/bits/c++config.h>
 #include <fstream>
+#include <ostream>
 #include <string>
 
 namespace minidb::storage {
@@ -11,8 +12,17 @@ Pager::Pager(const std::string &_fileName, bool _isInMemory = true)
     : isInMemory(_isInMemory) {
     if (!_isInMemory) {
         dataFile =
-            std::fstream(_fileName, std::fstream::in | std::fstream::app |
+            std::fstream(_fileName, std::fstream::out | std::fstream::in |
                                         std::fstream::binary);
+        if (dataFile.fail()) {
+            std::ofstream fout(_fileName);
+            fout.close();
+            dataFile.clear();
+            dataFile.close();
+            dataFile =
+                std::fstream(_fileName, std::fstream::out | std::fstream::in |
+                                            std::fstream::binary);
+        }
     }
 }
 
@@ -77,9 +87,12 @@ storage::SQLBinaryData Pager::readRow(std::uint32_t pos) {
 
 std::uint32_t Pager::getFileSize() {
     // auto mark = dataFile.tellg();
+    dataFile.seekg(0, dataFile.beg);
+    int beg = dataFile.tellg();
+
     dataFile.seekg(0, dataFile.end);
-    auto ans = dataFile.tellg();
+    int ed = dataFile.tellg();
     // dataFile.seekg(mark, dataFile.beg);
-    return ans;
+    return ed - beg;
 }
 } // namespace minidb::storage

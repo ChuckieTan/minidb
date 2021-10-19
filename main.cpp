@@ -3,6 +3,7 @@
 #include "MinidbStrings.h"
 #include "Pager.h"
 #include "Parser.h"
+#include "Storage.h"
 #include "TokenType.h"
 #include "spdlog/fmt/bundled/core.h"
 #include <c++/10/bits/c++config.h>
@@ -44,5 +45,8 @@ int main(int argc, char *argv[]) {
     //     fmt::print("{}\n", ch);
     // }
     // std::cout << str << " " << "success\n";
+
+    storage::Storage storage("student.db", false);
+    
     return 0;
 }
