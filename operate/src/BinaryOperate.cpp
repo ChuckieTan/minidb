@@ -8,7 +8,7 @@
 namespace minidb::operate {
 
 storage::SQLBinaryData
-    BiaryOperate::dump(const std::vector<ast::SQLExprValue> &values) {
+    BinaryOperate::dump(const std::vector<ast::SQLExprValue> &values) {
     storage::SQLBinaryData data;
 
     std::uint32_t size = 0;
@@ -25,7 +25,7 @@ storage::SQLBinaryData
         } else if (value.isString()) {
             // 字符串长度
             size += sizeof(std::uint32_t);
-            size += value.getStringValue().size() + 1;
+            size += value.getStringValue().size();
         }
     }
     data.size = size;
@@ -64,14 +64,14 @@ storage::SQLBinaryData
             auto v = value.getStringValue();
 
             // 写入字符串长度
-            std::uint32_t str_length = v.size() + 1;
+            std::uint32_t str_length = v.size();
             std::memcpy(data.data + current_addr, &str_length,
                         sizeof(str_length));
             current_addr += sizeof(str_length);
 
             // 写入字符串
-            std::memcpy(data.data + current_addr, v.c_str(), v.size() + 1);
-            current_addr += v.size() + 1;
+            std::memcpy(data.data + current_addr, v.c_str(), v.size());
+            current_addr += v.size();
         }
     }
 
@@ -79,7 +79,7 @@ storage::SQLBinaryData
 }
 
 std::vector<ast::SQLExprValue>
-    BiaryOperate::load(storage::SQLBinaryData data) {
+    BinaryOperate::load(storage::SQLBinaryData data) {
     std::vector<ast::SQLExprValue> res;
 
     std::uint32_t current_offset = 0;

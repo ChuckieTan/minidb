@@ -10,6 +10,9 @@ Input::Input() {
 }
 
 bool Input::readInputFromStream(std::istream &stream) {
+    if(buffer.size() != 0) {
+        buffer = "";
+    }
     MinidbStrings::print_string(MinidbStrings::StringType::full_pragma);
     std::string line;
     std::getline(stream, line);

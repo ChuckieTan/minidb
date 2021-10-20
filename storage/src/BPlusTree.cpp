@@ -12,7 +12,7 @@ namespace minidb::storage {
 
 BPlusTree::BPlusTree(std::uint32_t _root, Pager &_pager, Storage &_storage,
                      const std::string &_table_name)
-    : currentNode(new BPlusTreeNode(pager))
+    : currentNode(new BPlusTreeNode(_pager))
     , root_addr(_root)
     , pager(_pager)
     , storage(_storage)
@@ -33,8 +33,6 @@ BPlusTree::BPlusTree(std::uint32_t _root, Pager &_pager, Storage &_storage,
         currentNode->load(_root);
     }
 }
-
-BPlusTree::~BPlusTree() { delete currentNode; }
 
 bool BPlusTree::search_in_tree(std::int32_t key) {
     currentNode->load(root_addr);
@@ -130,7 +128,7 @@ bool BPlusTree::split_node() {
 
 std::uint32_t BPlusTree::createNode() {
     auto data = new char[ 4096 ];
-    auto addr = pager.write_back({ data, sizeof(data) });
+    auto addr = pager.write_back({ data, 4096 });
     delete[] data;
     return addr;
 }

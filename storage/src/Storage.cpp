@@ -52,7 +52,19 @@ Storage::Storage(const std::string &_fileName, bool _isInMemory)
 
         // 写入 tableNum
         pager.write({ (char *) &table_num, sizeof(table_num) }, current_addr);
-    } else if (file_size >= 11) {
+        current_addr += sizeof(table_num);
+
+        // 写入 table_define_begin
+        pager.write(
+            { (char *) &table_define_begin, sizeof(table_define_begin) },
+            current_addr);
+        current_addr += sizeof(table_define_begin);
+
+        // 写入 table_define_end
+        pager.write({ (char *) &table_define_end, sizeof(table_define_end) },
+                    current_addr);
+        current_addr += sizeof(table_define_end);
+    } else if (file_size >= 4096) {
         std::uint32_t current_addr = 0;
 
         // 判断文件开头是否有 Minidb 标识
@@ -69,12 +81,12 @@ Storage::Storage(const std::string &_fileName, bool _isInMemory)
 
         // 读入 table_define_begin
         pager.read({ (char *) &table_define_begin, sizeof(table_define_begin) },
-                   11);
+                   current_addr);
         current_addr += sizeof(table_define_begin);
 
         // 读入 table_define_end
         pager.read({ (char *) &table_define_end, sizeof(table_define_end) },
-                   15);
+                   current_addr);
         current_addr += sizeof(table_define_end);
 
         // 扫描所有表的信息，并生成其对应的B+树
@@ -193,11 +205,11 @@ bool Storage::new_table(const ast::SQLCreateTableStatement &creat_statement) {
 
     // 写入 table name 的长度
     auto &        table_name = creat_statement.tableName;
-    std::uint32_t size       = table_name.size() + 1;
+    std::uint32_t size       = table_name.size();
     write_binary(&size, sizeof(size), current_addr);
 
     // 写入 table name
-    write_binary(table_name.c_str(), table_name.size() + 1, current_addr);
+    write_binary(table_name.c_str(), table_name.size(), current_addr);
 
     // 写入存储root_addr的地址
     table_info.table_root_define_addr = current_addr;
@@ -224,7 +236,14 @@ bool Storage::new_table(const ast::SQLCreateTableStatement &creat_statement) {
     table_define_end = current_addr;
 
     // 更新 table_define_end
-    write_binary(&table_define_end, sizeof(table_define_end), current_addr);
+    std::uint32_t table_define_end_addr = 15;
+    write_binary(&table_define_end, sizeof(table_define_end),
+                 table_define_end_addr);
+
+    // 更新 table_num
+    table_num += 1;
+    std::uint32_t table_num_addr = tableNumAddr;
+    write_binary(&table_num, sizeof(table_num), table_num_addr);
 
     table_info.root_addr         = table_root_addr;
     table_info.tableName         = table_name;
@@ -255,7 +274,7 @@ ColumnInfo
     write_binary(&column_type, sizeof(column_type), current_addr);
 
     // 写入列名字符串长度，加上 '\0'
-    std::uint32_t column_name_size = column_define.columnName.size() + 1;
+    std::uint32_t column_name_size = column_define.columnName.size();
     write_binary(&column_name_size, sizeof(column_name_size), current_addr);
 
     // 写入列名
@@ -275,7 +294,8 @@ bool Storage::insert_data(const std::string &table_name, std::int32_t key,
     return true;
 }
 
-SQLBinaryData Storage::search_data(const std::string &table_name, std::int32_t key) {
+SQLBinaryData Storage::search_data(const std::string &table_name,
+                                   std::int32_t       key) {
     auto table_info = table_info_map[ table_name ];
     return table_info.b_plus_tree->search(key);
 }

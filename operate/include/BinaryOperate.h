@@ -6,7 +6,7 @@
 
 namespace minidb::operate {
 
-class BiaryOperate {
+class BinaryOperate {
 public:
     static storage::SQLBinaryData
         dump(const std::vector<ast::SQLExprValue> &values);

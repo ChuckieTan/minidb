@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -18,7 +19,6 @@ class BPlusTree {
 public:
     BPlusTree(std::uint32_t _root, Pager &pager, Storage &_storage,
               const std::string &_table_name);
-    ~BPlusTree();
 
     bool insert(std::int32_t key, SQLBinaryData);
     bool remove(std::int32_t key);
@@ -47,11 +47,11 @@ public:
     bool split_node();
 
 private:
-    Pager &        pager;
-    BPlusTreeNode *currentNode;
-    std::uint32_t  root_addr;
+    std::shared_ptr<BPlusTreeNode> currentNode;
 
-    std::string table_name;
-    Storage &   storage;
+    std::uint32_t root_addr;
+    std::string   table_name;
+    Pager &       pager;
+    Storage &     storage;
 };
 } // namespace minidb::storage

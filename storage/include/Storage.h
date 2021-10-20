@@ -5,10 +5,12 @@
 #include "SQLCreateTableStatement.h"
 #include "SQLInsertIntoStatement.h"
 #include "table_info.h"
+
 #include <cstdint>
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <map>
 #include <vector>
 
 namespace minidb::storage {
@@ -43,7 +45,7 @@ public:
     std::uint32_t              table_num;
     static const std::uint32_t pageSize           = 4096;
     static const std::uint32_t tableNumAddr       = 7;
-    std::uint32_t              table_define_begin = 11;
-    std::uint32_t              table_define_end   = 0;
+    std::uint32_t              table_define_begin = 19;
+    std::uint32_t              table_define_end   = 19;
 };
 } // namespace minidb::storage

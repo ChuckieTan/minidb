@@ -3,6 +3,7 @@
 #include "MinidbStrings.h"
 #include "Pager.h"
 #include "Parser.h"
+#include "SQLOperate.h"
 #include "Storage.h"
 #include "TokenType.h"
 #include "spdlog/fmt/bundled/core.h"
@@ -46,7 +47,8 @@ int main(int argc, char *argv[]) {
     // }
     // std::cout << str << " " << "success\n";
 
-    storage::Storage storage("student.db", false);
+    operate::SQLOperate operate("student.db");
+    operate.main_loop();
     
     return 0;
 }
