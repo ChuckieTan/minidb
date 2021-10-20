@@ -275,4 +275,9 @@ bool Storage::insert_data(const std::string &table_name, std::int32_t key,
     return true;
 }
 
+SQLBinaryData Storage::search_data(const std::string &table_name, std::int32_t key) {
+    auto table_info = table_info_map[ table_name ];
+    return table_info.b_plus_tree->search(key);
+}
+
 } // namespace minidb::storage

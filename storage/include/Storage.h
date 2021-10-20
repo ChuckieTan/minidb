@@ -32,6 +32,8 @@ public:
     bool insert_data(const std::string &table_name, std::int32_t key,
                      SQLBinaryData data);
 
+    SQLBinaryData search_data(const std::string &table_name, std::int32_t key);
+
     /**
      * @brief 写入指定大小的二进制数据，同时使current_addr往后移动
      */
