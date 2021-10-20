@@ -8,104 +8,116 @@
 namespace minidb::operate {
 
 storage::SQLBinaryData
-    BiaryOperate::dumps(const std::vector<ast::SQLExprValue> &values) {
-    // 计算数据大小
+    BiaryOperate::dump(const std::vector<ast::SQLExprValue> &values) {
+    storage::SQLBinaryData data;
+
     std::uint32_t size = 0;
+
+    // 计算二进制数据所需的大小
     for (const auto &value : values) {
-        size += sizeof(std::int8_t);
+        // 数据类型标识
+        size += sizeof(std::uint8_t);
+
         if (value.isInt()) {
-            size += sizeof(std::int32_t);
+            size += sizeof(int);
         } else if (value.isFloat()) {
             size += sizeof(double);
         } else if (value.isString()) {
-            // 加上 字符串长度和 '\0' 后的大小
-            size += sizeof(std::int32_t) +
-                    value.getStringValue().size() * (sizeof(char) + 1);
+            // 字符串长度
+            size += sizeof(std::uint32_t);
+            size += value.getStringValue().size() + 1;
         }
     }
-    auto data = new char[ size ];
+    data.size = size;
 
-    // 复制内存
-    std::uint32_t currentOffset = 0;
+    data.data = new char[ size ];
+
+    // dump所需要的数据
+    std::uint32_t current_addr = 0;
     for (const auto &value : values) {
         if (value.isInt()) {
             // 写入数据类型
-            std::memcpy(data + currentOffset, &DATA_INT, sizeof(DATA_INT));
-            currentOffset += sizeof(DATA_INT);
+            std::uint8_t type = DATA_INT;
+            std::memcpy(data.data + current_addr, &type, sizeof(type));
+            current_addr += sizeof(type);
 
-            std::int32_t v = value.getIntValue();
-            std::memcpy(data + currentOffset, &v, sizeof(v));
-            currentOffset += sizeof(v);
+            // 写入数据
+            auto v = value.getIntValue();
+            std::memcpy(data.data + current_addr, &v, sizeof(v));
+            current_addr += sizeof(v);
         } else if (value.isFloat()) {
             // 写入数据类型
-            std::memcpy(data + currentOffset, &DATA_FLOAT, sizeof(DATA_FLOAT));
-            currentOffset += sizeof(DATA_FLOAT);
+            std::uint8_t type = DATA_FLOAT;
+            std::memcpy(data.data + current_addr, &type, sizeof(type));
+            current_addr += sizeof(type);
 
-            double v = value.getFloatValue();
-            std::memcpy(data + currentOffset, &v, sizeof(v));
-            currentOffset += sizeof(v);
+            // 写入数据
+            auto v = value.getFloatValue();
+            std::memcpy(data.data + current_addr, &v, sizeof(v));
+            current_addr += sizeof(v);
         } else if (value.isString()) {
             // 写入数据类型
-            std::memcpy(data + currentOffset, &DATA_STRING,
-                        sizeof(DATA_STRING));
-            currentOffset += sizeof(DATA_STRING);
+            std::uint8_t type = DATA_STRING;
+            std::memcpy(data.data + current_addr, &type, sizeof(type));
+            current_addr += sizeof(type);
 
-            std::string  v       = value.getStringValue();
-            std::int32_t strSize = v.size();
+            auto v = value.getStringValue();
 
-            std::memcpy(data + currentOffset, &strSize, sizeof(strSize));
-            currentOffset += sizeof(strSize);
+            // 写入字符串长度
+            std::uint32_t str_length = v.size() + 1;
+            std::memcpy(data.data + current_addr, &str_length,
+                        sizeof(str_length));
+            current_addr += sizeof(str_length);
 
-            // 加上 '\0'
-            std::memcpy(data + currentOffset, v.c_str(),
-                        v.size() * (sizeof(char) + 1));
-            currentOffset += v.size() * (sizeof(char) + 1);
+            // 写入字符串
+            std::memcpy(data.data + current_addr, v.c_str(), v.size() + 1);
+            current_addr += v.size() + 1;
         }
     }
 
-    storage::SQLBinaryData res;
-    res.data = data;
-    res.size = size;
-    return res;
-};
+    return data;
+}
 
-std::vector<ast::SQLExprValue> BiaryOperate::loads(storage::SQLBinaryData data) {
+std::vector<ast::SQLExprValue>
+    BiaryOperate::load(storage::SQLBinaryData data) {
     std::vector<ast::SQLExprValue> res;
 
-    std::uint32_t currentOffset = 0;
-    while (currentOffset < data.size) {
+    std::uint32_t current_offset = 0;
+    while (current_offset < data.size) {
         ast::SQLExprValue item;
 
-        std::uint8_t valueType;
-        std::memcpy(&valueType, data.data + currentOffset, sizeof(valueType));
-        currentOffset += sizeof(valueType);
+        std::uint8_t value_type;
+        std::memcpy(&value_type, data.data + current_offset,
+                    sizeof(value_type));
+        current_offset += sizeof(value_type);
 
-        if (valueType == DATA_INT) {
+        if (value_type == DATA_INT) {
             std::int32_t value;
-            std::memcpy(&value, data.data + currentOffset, sizeof(value));
-            currentOffset += sizeof(value);
+            std::memcpy(&value, data.data + current_offset, sizeof(value));
+            current_offset += sizeof(value);
 
             item = ast::SQLExprValue(value);
-        } else if (valueType == DATA_FLOAT) {
+        } else if (value_type == DATA_FLOAT) {
             double value;
-            std::memcpy(&value, data.data + currentOffset, sizeof(value));
-            currentOffset += sizeof(value);
+            std::memcpy(&value, data.data + current_offset, sizeof(value));
+            current_offset += sizeof(value);
 
             item = ast::SQLExprValue(value);
-        } else if (valueType == DATA_STRING) {
+        } else if (value_type == DATA_STRING) {
             // 读入字符串长度
-            std::uint32_t valueSize;
-            std::memcpy(&valueSize, data.data + currentOffset,
-                        sizeof(valueSize));
-            currentOffset += sizeof(valueSize);
+            std::uint32_t str_length;
+            std::memcpy(&str_length, data.data + current_offset,
+                        sizeof(str_length));
+            current_offset += sizeof(str_length);
 
             // 先读入到vector中，再构造字符串
-            std::vector<char> valueSeq(valueSize);
-            std::memcpy(valueSeq.data(), data.data + currentOffset, valueSize);
-            currentOffset += valueSize;
+            std::vector<char> value_seq(str_length);
+            std::memcpy(value_seq.data(), data.data + current_offset,
+                        str_length);
+            current_offset += str_length;
 
             std::string value;
-            value.insert(value.begin(), valueSeq.begin(), valueSeq.end());
+            value.insert(value.begin(), value_seq.begin(), value_seq.end());
 
             item = ast::SQLExprValue(value);
         }
