@@ -1,6 +1,7 @@
 #include "Storage.h"
 #include "BPlusTree.h"
 #include "Pager.h"
+#include "SQLBinaryData.h"
 #include "SQLColumnDefine.h"
 #include "spdlog/spdlog.h"
 #include "table_info.h"
@@ -265,6 +266,13 @@ ColumnInfo
     column_info.column_name = column_define.columnName;
     column_info.column_type = column_type;
     return column_info;
+}
+
+bool Storage::insert_data(const std::string &table_name, std::int32_t key,
+                          SQLBinaryData data) {
+    auto table_info = table_info_map[ table_name ];
+    table_info.b_plus_tree->insert(key, data);
+    return true;
 }
 
 } // namespace minidb::storage
