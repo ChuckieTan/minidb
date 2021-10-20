@@ -106,8 +106,9 @@ bool BPlusTreeNode::insert_entry(std::int32_t key, std::uint32_t value) {
     }
 
     keys.insert(keys.begin() + pos, key);
-    childrenOrValue.insert(childrenOrValue.begin() + pos, addr);
+    childrenOrValue.insert(childrenOrValue.begin() + pos, value);
     len++;
+    dump();
     return true;
 }
 

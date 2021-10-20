@@ -36,7 +36,8 @@ void SQLOperate::main_loop() {
             auto statement = parser.parseSelectStatement();
             auto data      = storage.search_data(statement.tableSource, 1);
             auto expr      = BinaryOperate::load(data);
-            std::cout << expr.size() << std::endl;
+            spdlog::info("{} {} {}", expr.size(), expr[ 0 ].getIntValue(),
+                         expr[ 1 ].getStringValue());
         }
         input.readInputFromStream(std::cin);
     }
