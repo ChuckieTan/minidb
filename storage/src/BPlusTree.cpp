@@ -37,9 +37,10 @@ BPlusTree::BPlusTree(std::uint32_t _root, Pager &_pager, Storage &_storage,
 bool BPlusTree::search_in_tree(std::int32_t key) {
     currentNode->load(root_addr);
     while (!currentNode->_isLeaf) {
-        auto addr = std::lower_bound(currentNode->keys.begin(),
-                                     currentNode->keys.end(), key) -
-                    currentNode->keys.begin();
+        auto index = std::lower_bound(currentNode->keys.begin(),
+                                      currentNode->keys.end(), key) -
+                     currentNode->keys.begin();
+        auto addr = currentNode->childrenOrValue[ index ];
         currentNode->load(addr);
     }
     return true;
