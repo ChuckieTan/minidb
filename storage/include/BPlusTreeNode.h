@@ -20,7 +20,9 @@ public:
     std::vector<std::uint32_t> childrenOrValue;
 
     bool          _isLeaf;
-    std::uint32_t nextLeaf;
+
+    std::uint32_t pre_leaf;
+    std::uint32_t next_leaf;
 
     Pager &       pager;
     std::uint32_t addr;

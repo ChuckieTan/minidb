@@ -11,83 +11,92 @@ BPlusTreeNode::BPlusTreeNode(Pager &_pager)
     , keys(order)
     , childrenOrValue(order)
     , _isLeaf(true)
-    , nextLeaf(0)
+    , pre_leaf(0)
+    , next_leaf(0)
     , len(0)
     , pager(_pager) {}
 
 bool BPlusTreeNode::load(std::uint32_t _addr) {
-    std::uint32_t currentAddr = _addr;
+    std::uint32_t current_addr = _addr;
 
     // 读入父节点地址
-    pager.read({ (char *) &(parent), sizeof(parent) }, currentAddr);
-    currentAddr += sizeof(parent);
+    pager.read({ (char *) &(parent), sizeof(parent) }, current_addr);
+    current_addr += sizeof(parent);
 
     // 读入元素数量
-    pager.read({ (char *) &(len), sizeof(len) }, currentAddr);
-    currentAddr += sizeof(len);
+    pager.read({ (char *) &(len), sizeof(len) }, current_addr);
+    current_addr += sizeof(len);
 
     // 读入 key 列表
     pager.read({ (char *) keys.data(), sizeof(keys[ 0 ]) * order },
-               currentAddr);
-    currentAddr += sizeof(keys[ 0 ]) * order;
+               current_addr);
+    current_addr += sizeof(keys[ 0 ]) * order;
 
     // 读入 childrenOrValue 列表
     pager.read({ (char *) childrenOrValue.data(),
                  sizeof(childrenOrValue[ 0 ]) * order },
-               currentAddr);
-    currentAddr += sizeof(childrenOrValue[ 0 ]) * order;
+               current_addr);
+    current_addr += sizeof(childrenOrValue[ 0 ]) * order;
 
     // 读入 _isLeaf
-    pager.read({ (char *) &(_isLeaf), sizeof(_isLeaf) }, currentAddr);
-    currentAddr += sizeof(_isLeaf);
+    pager.read({ (char *) &(_isLeaf), sizeof(_isLeaf) }, current_addr);
+    current_addr += sizeof(_isLeaf);
 
-    // 读入 nextLeaf
-    pager.read({ (char *) &(nextLeaf), sizeof(nextLeaf) }, currentAddr);
-    currentAddr += sizeof(nextLeaf);
+    // 读入 pre_leaf
+    pager.read({ (char *) &(pre_leaf), sizeof(pre_leaf) }, current_addr);
+    current_addr += sizeof(pre_leaf);
+
+    // 读入 next_leaf
+    pager.read({ (char *) &(next_leaf), sizeof(next_leaf) }, current_addr);
+    current_addr += sizeof(next_leaf);
 
     addr = _addr;
     return true;
 }
 
 bool BPlusTreeNode::dump(std::uint32_t _addr) {
-    std::uint32_t currentAddr;
+    std::uint32_t current_addr;
     if (_addr == 0) {
         // 保存到当前所存的位置
-        currentAddr = addr;
+        current_addr = addr;
     } else {
         // 保存到新位置
-        currentAddr = _addr;
+        current_addr = _addr;
         addr        = _addr;
     }
 
     // 写入父节点地址
-    pager.write({ (char *) &(parent), sizeof(parent) }, currentAddr);
-    currentAddr += sizeof(parent);
+    pager.write({ (char *) &(parent), sizeof(parent) }, current_addr);
+    current_addr += sizeof(parent);
 
     // 写入元素数量
-    pager.write({ (char *) &(len), sizeof(len) }, currentAddr
+    pager.write({ (char *) &(len), sizeof(len) }, current_addr
                 // namespace minidb::storage
     );
-    currentAddr += sizeof(len);
+    current_addr += sizeof(len);
 
     // 写入 key 列表
     pager.write({ (char *) keys.data(), sizeof(keys[ 0 ]) * order },
-                currentAddr);
-    currentAddr += sizeof(keys[ 0 ]) * order;
+                current_addr);
+    current_addr += sizeof(keys[ 0 ]) * order;
 
     // 写入 childrenOrValue 列表
     pager.write({ (char *) childrenOrValue.data(),
                   sizeof(childrenOrValue[ 0 ]) * order },
-                currentAddr);
-    currentAddr += sizeof(childrenOrValue[ 0 ]) * order;
+                current_addr);
+    current_addr += sizeof(childrenOrValue[ 0 ]) * order;
 
     // 写入 _isLeaf
-    pager.write({ (char *) &(_isLeaf), sizeof(_isLeaf) }, currentAddr);
-    currentAddr += sizeof(_isLeaf);
+    pager.write({ (char *) &(_isLeaf), sizeof(_isLeaf) }, current_addr);
+    current_addr += sizeof(_isLeaf);
 
-    // 写入 nextLeaf
-    pager.write({ (char *) &(nextLeaf), sizeof(nextLeaf) }, currentAddr);
-    currentAddr += sizeof(nextLeaf);
+    // 写入 pre_leaf
+    pager.write({ (char *) &(pre_leaf), sizeof(pre_leaf) }, current_addr);
+    current_addr += sizeof(pre_leaf);
+
+    // 写入 next_leaf
+    pager.write({ (char *) &(next_leaf), sizeof(next_leaf) }, current_addr);
+    current_addr += sizeof(next_leaf);
     return true;
 }
 

@@ -41,10 +41,13 @@ public:
     bool search_in_tree(std::int32_t key);
 
     std::uint32_t    createNode();
-    bool             changeRoot(std::uint32_t addr);
+    bool             change_root(std::uint32_t addr);
+    bool             change_first_leaf(std::uint32_t addr);
+    bool             change_last_leaf(std::uint32_t addr);
     static const int order = 256;
 
-    bool split_node();
+    bool split_leaf();
+    bool split_parent();
 
 private:
     std::shared_ptr<BPlusTreeNode> currentNode;
@@ -53,5 +56,8 @@ private:
     std::string   table_name;
     Pager &       pager;
     Storage &     storage;
+
+    std::uint32_t first_leaf_addr;
+    std::uint32_t last_leaf_addr;
 };
 } // namespace minidb::storage

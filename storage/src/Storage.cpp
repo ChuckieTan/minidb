@@ -23,9 +23,10 @@ static char tag[ 7 ] = "Minidb";
 // table define:
 // table_define_length | table_name_length | table_name
 // 4B                  | 4B                | ...
-//       | table_root_addr | column_num | (column_define)*
-//       | 4B              | 4B         | ...
-//
+//       | table_root_addr | first_leaf_addr | last_leaf_addr
+//       | 4B              | 4B         |    | 4B
+//       | column_num | (column_define)*
+//       | 4B         | ...
 // column_define:
 // column_type | column_name_size | column_name
 // 1B          | 4B               | ...
@@ -141,25 +142,41 @@ TableInfo Storage::scan_table(std::uint32_t &current_addr) {
 
     // 获取存储表的根节点的地址
     table_info.table_root_define_addr = current_addr;
-    // 获取表的首个节点地址
-    std::uint32_t tableAddr;
-    pager.read({ (char *) &tableAddr, sizeof(tableAddr) }, current_addr);
-    current_addr += sizeof(tableAddr);
+    // 获取表的根节点地址
+    std::uint32_t table_root_addr;
+    pager.read({ (char *) &table_root_addr, sizeof(table_root_addr) },
+               current_addr);
+    current_addr += sizeof(table_root_addr);
+
+    table_info.first_leaf_define_addr = current_addr;
+    // 获取第一个叶子节点的地址
+    std::uint32_t first_leaf_addr;
+    pager.read({ (char *) &first_leaf_addr, sizeof(first_leaf_addr) },
+               current_addr);
+    current_addr += sizeof(first_leaf_addr);
+
+    table_info.last_leaf_define_addr = current_addr;
+    // 获取最后一个叶子节点的地址
+    std::uint32_t last_leaf_addr;
+    pager.read({ (char *) &last_leaf_addr, sizeof(last_leaf_addr) },
+               current_addr);
+    current_addr += sizeof(last_leaf_addr);
 
     // 获取列的数量
-    std::uint32_t columnNum;
-    pager.read({ (char *) &columnNum, sizeof(columnNum) }, current_addr);
-    current_addr += sizeof(columnNum);
+    std::uint32_t column_num;
+    pager.read({ (char *) &column_num, sizeof(column_num) }, current_addr);
+    current_addr += sizeof(column_num);
 
     // 获取所有列的信息
     ColumnInfo column_info;
-    for (int i = 0; i < columnNum; i++) {
+    for (int i = 0; i < column_num; i++) {
         table_info.columns.push_back(scan_column(current_addr));
     }
 
     table_info.tableName = tableName;
-    table_info.root_addr = tableAddr;
-
+    table_info.root_addr = table_root_addr;
+    table_info.first_leaf_addr = first_leaf_addr;
+    table_info.last_leaf_addr = last_leaf_addr;
     return table_info;
 }
 
@@ -199,12 +216,12 @@ bool Storage::write_binary(const void *data, std::uint32_t size,
 
 bool Storage::new_table(const ast::SQLCreateTableStatement &creat_statement) {
     TableInfo table_info;
+    auto &        table_name = creat_statement.tableName;
 
     // 先不写 table define 的长度
     std::uint32_t current_addr = table_define_end + 4;
 
     // 写入 table name 的长度
-    auto &        table_name = creat_statement.tableName;
     std::uint32_t size       = table_name.size();
     write_binary(&size, sizeof(size), current_addr);
 
@@ -214,9 +231,21 @@ bool Storage::new_table(const ast::SQLCreateTableStatement &creat_statement) {
     // 写入存储root_addr的地址
     table_info.table_root_define_addr = current_addr;
 
-    // 写入 table root 节点地址
+    // 写入 table root 节点地址，暂时为0，生成B+树时会修改
     std::uint32_t table_root_addr = 0;
     write_binary(&table_root_addr, sizeof(table_root_addr), current_addr);
+
+    table_info.first_leaf_define_addr = current_addr;
+
+    // 写入 first_leaf_addr，暂时为0，生成B+树时会修改
+    std::uint32_t first_leaf_addr = 0;
+    write_binary(&first_leaf_addr, sizeof(first_leaf_addr), current_addr);
+
+    table_info.last_leaf_define_addr = current_addr;
+
+    // 写入 last_leaf_addr，暂时为0，生成B+树时会修改
+    std::uint32_t last_leaf_addr = 0;
+    write_binary(&last_leaf_addr, sizeof(last_leaf_addr), current_addr);
 
     // 写入列的数量
     std::uint32_t column_num = creat_statement.columnDefineList.size();
@@ -254,7 +283,7 @@ bool Storage::new_table(const ast::SQLCreateTableStatement &creat_statement) {
     // 因为生成新树需要修改 table_info_map
     table_info_map[ table_name ].b_plus_tree = std::make_shared<BPlusTree>(
         table_info.root_addr, pager, *this, table_info.tableName);
-
+    
     spdlog::info("create a new table: {}", table_name);
     return true;
 }
