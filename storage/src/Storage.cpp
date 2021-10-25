@@ -14,19 +14,32 @@ namespace minidb::storage {
 
 static char tag[ 7 ] = "Minidb";
 
+// struct FileMetaData {
+//     char          tag[ 7 ] = "Minidb";
+//     std::uint32_t table_num;
+//     std::uint32_t table_define_begin;
+//     std::uint32_t table_define_end;
+// };
+
+// struct TableDefineMetaData {
+//     std::uint32_t table_root_addr;
+//     std::uint32_t first_leaf_addr;
+//     std::uint32_t last_leaf_addr;
+//     std::uint32_t column_num;
+// };
+
 // file data format:
 // 'Minidb' | table_num | table_define_begin
 // 7B       | 4B        | 4B
 // table_define_end | (table_define)*
 // 4B               | ...
 //
+// table name 放在最后，前面的由结构体一块写入
 // table define:
-// table_define_length | table_name_length | table_name
-// 4B                  | 4B                | ...
-//       | table_root_addr | first_leaf_addr | last_leaf_addr
-//       | 4B              | 4B         |    | 4B
-//       | column_num | (column_define)*
-//       | 4B         | ...
+// table_define_length | table_root_addr | first_leaf_addr
+//       | last_leaf_addr | column_num | table_name_length
+//       | table_name| (column_define)*
+//
 // column_define:
 // column_type | column_name_size | column_name
 // 1B          | 4B               | ...
@@ -42,57 +55,38 @@ Storage::Storage(const std::string &_fileName, bool _isInMemory)
         pager.write({ head, pageSize }, 0);
         delete[] head;
 
+        FileMetaData file_meta_data;
+        file_meta_data.table_num          = 0;
+        file_meta_data.table_define_begin = sizeof(file_meta_data);
+        file_meta_data.table_define_end   = sizeof(file_meta_data);
+
+        table_define_begin = file_meta_data.table_define_begin;
+        table_define_end   = file_meta_data.table_define_end;
+
         // 写入数据库元信息
         std::uint32_t current_addr = 0;
-        // 写入 Minidb 标识
-        pager.write({ tag, sizeof(tag) }, current_addr);
-        current_addr += sizeof(tag);
-
-        table_num        = 0;
-        table_define_end = table_define_begin;
-
-        // 写入 tableNum
-        pager.write({ (char *) &table_num, sizeof(table_num) }, current_addr);
-        current_addr += sizeof(table_num);
-
-        // 写入 table_define_begin
-        pager.write(
-            { (char *) &table_define_begin, sizeof(table_define_begin) },
-            current_addr);
-        current_addr += sizeof(table_define_begin);
-
-        // 写入 table_define_end
-        pager.write({ (char *) &table_define_end, sizeof(table_define_end) },
-                    current_addr);
-        current_addr += sizeof(table_define_end);
+        write_binary(&file_meta_data, sizeof(file_meta_data), current_addr);
     } else if (file_size >= 4096) {
         std::uint32_t current_addr = 0;
 
+        // 读取元信息
+        FileMetaData file_meta_data;
+        pager.read({ (char *) &file_meta_data, sizeof(file_meta_data) },
+                   current_addr);
+        current_addr += sizeof(file_meta_data);
+
         // 判断文件开头是否有 Minidb 标识
-        char head[ 7 ];
-        pager.read({ head, sizeof(head) }, current_addr);
-        current_addr += sizeof(head);
-
-        if (std::strcmp(head, tag) != 0) {
+        if (std::strcmp(file_meta_data.tag, tag) != 0) {
             spdlog::error("{} is not a Minidb database file", _fileName);
+            throw "not a minidb database file";
         }
-        // 读入 table_num
-        pager.read({ (char *) &table_num, sizeof(table_num) }, current_addr);
-        current_addr += sizeof(table_num);
 
-        // 读入 table_define_begin
-        pager.read({ (char *) &table_define_begin, sizeof(table_define_begin) },
-                   current_addr);
-        current_addr += sizeof(table_define_begin);
-
-        // 读入 table_define_end
-        pager.read({ (char *) &table_define_end, sizeof(table_define_end) },
-                   current_addr);
-        current_addr += sizeof(table_define_end);
+        table_num          = file_meta_data.table_num;
+        table_define_begin = file_meta_data.table_define_begin;
+        table_define_end   = file_meta_data.table_define_end;
 
         // 扫描所有表的信息，并生成其对应的B+树
         scan_tables();
-
     } else {
         spdlog::error("{} is not a Minidb database file", _fileName);
     }
@@ -118,65 +112,34 @@ bool Storage::scan_tables() {
 }
 
 TableInfo Storage::scan_table(std::uint32_t &current_addr) {
+    // 读取 table_define_meta_data
+    TableDefineMetaData table_define_meta_data;
+    pager.read(
+        { (char *) &table_define_meta_data, sizeof(table_define_meta_data) },
+        current_addr);
+    current_addr += sizeof(table_define_meta_data);
+
     TableInfo table_info;
 
-    // 获取表定义的长度
-    std::uint32_t table_define_size;
-    pager.read({ (char *) &table_define_size, sizeof(table_define_size) },
-               current_addr);
-    current_addr += sizeof(table_define_size);
-
-    // 获取当前表名的大小
-    std::uint32_t tableNameSize;
-    pager.read({ (char *) &tableNameSize, sizeof(tableNameSize) },
-               current_addr);
-    current_addr += sizeof(tableNameSize);
-
+    std::uint32_t table_name_length = table_define_meta_data.table_name_length;
     // 获取当前表名
-    std::vector<char> tableNameSeq(tableNameSize);
-    pager.read({ tableNameSeq.data(), tableNameSize }, current_addr);
-    std::string tableName;
-    tableName.insert(tableName.begin(), tableNameSeq.begin(),
-                     tableNameSeq.end());
-    current_addr += tableNameSize;
-
-    // 获取存储表的根节点的地址
-    table_info.table_root_define_addr = current_addr;
-    // 获取表的根节点地址
-    std::uint32_t table_root_addr;
-    pager.read({ (char *) &table_root_addr, sizeof(table_root_addr) },
-               current_addr);
-    current_addr += sizeof(table_root_addr);
-
-    table_info.first_leaf_define_addr = current_addr;
-    // 获取第一个叶子节点的地址
-    std::uint32_t first_leaf_addr;
-    pager.read({ (char *) &first_leaf_addr, sizeof(first_leaf_addr) },
-               current_addr);
-    current_addr += sizeof(first_leaf_addr);
-
-    table_info.last_leaf_define_addr = current_addr;
-    // 获取最后一个叶子节点的地址
-    std::uint32_t last_leaf_addr;
-    pager.read({ (char *) &last_leaf_addr, sizeof(last_leaf_addr) },
-               current_addr);
-    current_addr += sizeof(last_leaf_addr);
-
-    // 获取列的数量
-    std::uint32_t column_num;
-    pager.read({ (char *) &column_num, sizeof(column_num) }, current_addr);
-    current_addr += sizeof(column_num);
+    std::vector<char> table_name_seq(table_name_length);
+    pager.read({ table_name_seq.data(), table_name_length }, current_addr);
+    std::string table_name;
+    table_name.insert(table_name.begin(), table_name_seq.begin(),
+                      table_name_seq.end());
+    current_addr += table_name_length;
 
     // 获取所有列的信息
     ColumnInfo column_info;
-    for (int i = 0; i < column_num; i++) {
+    for (int i = 0; i < table_define_meta_data.column_num; i++) {
         table_info.columns.push_back(scan_column(current_addr));
     }
 
-    table_info.tableName = tableName;
-    table_info.root_addr = table_root_addr;
-    table_info.first_leaf_addr = first_leaf_addr;
-    table_info.last_leaf_addr = last_leaf_addr;
+    table_info.tableName       = table_name;
+    table_info.root_addr       = table_define_meta_data.table_root_addr;
+    table_info.first_leaf_addr = table_define_meta_data.first_leaf_addr;
+    table_info.last_leaf_addr  = table_define_meta_data.last_leaf_addr;
     return table_info;
 }
 
@@ -214,47 +177,45 @@ bool Storage::write_binary(const void *data, std::uint32_t size,
     return true;
 }
 
-bool Storage::new_table(const ast::SQLCreateTableStatement &creat_statement) {
+bool Storage::new_table(const ast::SQLCreateTableStatement &create_statement) {
+    auto &table_name = create_statement.tableName;
+
+    TableDefineMetaData table_define_meta_data;
+    // 写入table定义信息
+    // table define,table_root_addr,first_leaf_addr,
+    // last_leaf_addr 初始为0，后面更改
+    table_define_meta_data.column_num =
+        create_statement.columnDefineList.size();
+    table_define_meta_data.table_name_length = table_name.size();
+
     TableInfo table_info;
-    auto &        table_name = creat_statement.tableName;
 
-    // 先不写 table define 的长度
-    std::uint32_t current_addr = table_define_end + 4;
+    table_info.tableName = table_name;
 
-    // 写入 table name 的长度
-    std::uint32_t size       = table_name.size();
-    write_binary(&size, sizeof(size), current_addr);
+    table_info.table_root_define_addr =
+        table_define_end + (char *) &table_define_meta_data.table_root_addr -
+        (char *) &table_define_meta_data;
+
+    table_info.first_leaf_define_addr =
+        table_define_end + (char *) &table_define_meta_data.first_leaf_addr -
+        (char *) &table_define_meta_data;
+
+    table_info.last_leaf_define_addr =
+        table_define_end + (char *) &table_define_meta_data.last_leaf_addr -
+        (char *) &table_define_meta_data;
+
+    std::uint32_t current_addr = table_define_end;
+
+    // 写入 table 定义信息
+    write_binary(&table_define_meta_data, sizeof(table_define_meta_data),
+                 current_addr);
 
     // 写入 table name
     write_binary(table_name.c_str(), table_name.size(), current_addr);
 
-    // 写入存储root_addr的地址
-    table_info.table_root_define_addr = current_addr;
-
-    // 写入 table root 节点地址，暂时为0，生成B+树时会修改
-    std::uint32_t table_root_addr = 0;
-    write_binary(&table_root_addr, sizeof(table_root_addr), current_addr);
-
-    table_info.first_leaf_define_addr = current_addr;
-
-    // 写入 first_leaf_addr，暂时为0，生成B+树时会修改
-    std::uint32_t first_leaf_addr = 0;
-    write_binary(&first_leaf_addr, sizeof(first_leaf_addr), current_addr);
-
-    table_info.last_leaf_define_addr = current_addr;
-
-    // 写入 last_leaf_addr，暂时为0，生成B+树时会修改
-    std::uint32_t last_leaf_addr = 0;
-    write_binary(&last_leaf_addr, sizeof(last_leaf_addr), current_addr);
-
-    // 写入列的数量
-    std::uint32_t column_num = creat_statement.columnDefineList.size();
-    write_binary(&column_num, sizeof(column_num), current_addr);
-
     // 写入所有列，并且放入当前table列表中
-    for (std::uint32_t i = 0; i < column_num; i++) {
-        auto column_info = write_column_define(
-            creat_statement.columnDefineList[ i ], current_addr);
+    for (const auto &column_define : create_statement.columnDefineList) {
+        auto column_info = write_column_define(column_define, current_addr);
         table_info.columns.push_back(column_info);
     }
 
@@ -262,20 +223,23 @@ bool Storage::new_table(const ast::SQLCreateTableStatement &creat_statement) {
     std::uint32_t table_define_length = current_addr - table_define_end;
     write_binary(&table_define_length, sizeof(table_define_length),
                  table_define_end);
-    table_define_end = current_addr;
+
+    FileMetaData file_meta_data;
 
     // 更新 table_define_end
-    std::uint32_t table_define_end_addr = 15;
+    table_define_end = current_addr;
+    // 更新磁盘上的 table_define_end
+    std::uint32_t table_define_end_addr =
+        (char *) &file_meta_data.table_define_end - (char *) &file_meta_data;
     write_binary(&table_define_end, sizeof(table_define_end),
                  table_define_end_addr);
 
     // 更新 table_num
     table_num += 1;
-    std::uint32_t table_num_addr = tableNumAddr;
+    std::uint32_t table_num_addr =
+        (char *) &file_meta_data.table_num - (char *) &file_meta_data;
     write_binary(&table_num, sizeof(table_num), table_num_addr);
 
-    table_info.root_addr         = table_root_addr;
-    table_info.tableName         = table_name;
     table_info_map[ table_name ] = table_info;
 
     // 生成B+树
@@ -283,7 +247,7 @@ bool Storage::new_table(const ast::SQLCreateTableStatement &creat_statement) {
     // 因为生成新树需要修改 table_info_map
     table_info_map[ table_name ].b_plus_tree = std::make_shared<BPlusTree>(
         table_info.root_addr, pager, *this, table_info.tableName);
-    
+
     spdlog::info("create a new table: {}", table_name);
     return true;
 }

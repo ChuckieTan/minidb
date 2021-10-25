@@ -8,12 +8,28 @@
 
 #include <cstdint>
 #include <iostream>
+#include <map>
 #include <string>
 #include <unordered_map>
-#include <map>
 #include <vector>
 
 namespace minidb::storage {
+
+struct FileMetaData {
+    char          tag[ 7 ] = "Minidb";
+    std::uint32_t table_num;
+    std::uint32_t table_define_begin;
+    std::uint32_t table_define_end;
+};
+
+struct TableDefineMetaData {
+    std::uint32_t table_define_length;
+    std::uint32_t table_root_addr;
+    std::uint32_t first_leaf_addr;
+    std::uint32_t last_leaf_addr;
+    std::uint32_t column_num;
+    std::uint32_t table_name_length;
+};
 
 class Storage {
 public:
