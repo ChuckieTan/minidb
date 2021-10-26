@@ -52,7 +52,7 @@ Storage::Storage(const std::string &_fileName, bool _isInMemory)
     if (file_size == 0) {
         // 写入 4KB 作为 Metadata
         char *head = new char[ pageSize ]{ 0 };
-        pager.write({ head, pageSize }, 0);
+        pager.write(head, pageSize, 0);
         delete[] head;
 
         FileMetaData file_meta_data;
@@ -71,7 +71,7 @@ Storage::Storage(const std::string &_fileName, bool _isInMemory)
 
         // 读取元信息
         FileMetaData file_meta_data;
-        pager.read({ (char *) &file_meta_data, sizeof(file_meta_data) },
+        pager.read((char *) &file_meta_data, sizeof(file_meta_data),
                    current_addr);
         current_addr += sizeof(file_meta_data);
 
@@ -114,9 +114,8 @@ bool Storage::scan_tables() {
 TableInfo Storage::scan_table(std::uint32_t &current_addr) {
     // 读取 table_define_meta_data
     TableDefineMetaData table_define_meta_data;
-    pager.read(
-        { (char *) &table_define_meta_data, sizeof(table_define_meta_data) },
-        current_addr);
+    pager.read(&table_define_meta_data, sizeof(table_define_meta_data),
+               current_addr);
     current_addr += sizeof(table_define_meta_data);
 
     TableInfo table_info;
@@ -124,7 +123,7 @@ TableInfo Storage::scan_table(std::uint32_t &current_addr) {
     std::uint32_t table_name_length = table_define_meta_data.table_name_length;
     // 获取当前表名
     std::vector<char> table_name_seq(table_name_length);
-    pager.read({ table_name_seq.data(), table_name_length }, current_addr);
+    pager.read(table_name_seq.data(), table_name_length, current_addr);
     std::string table_name;
     table_name.insert(table_name.begin(), table_name_seq.begin(),
                       table_name_seq.end());
@@ -148,18 +147,17 @@ ColumnInfo Storage::scan_column(std::uint32_t &current_addr) {
 
     // 获取列的数据类型
     std::uint8_t column_type;
-    pager.read({ (char *) &column_type, sizeof(column_type) }, current_addr);
+    pager.read(&column_type, sizeof(column_type), current_addr);
     current_addr += sizeof(column_type);
 
     // 获取列名长度
     std::uint32_t column_name_size;
-    pager.read({ (char *) &column_name_size, sizeof(column_name_size) },
-               current_addr);
+    pager.read(&column_name_size, sizeof(column_name_size), current_addr);
     current_addr += sizeof(column_name_size);
 
     // 获取当前表名
     std::vector<char> column_name_seq(column_name_size);
-    pager.read({ column_name_seq.data(), column_name_size }, current_addr);
+    pager.read(column_name_seq.data(), column_name_size, current_addr);
     std::string column_name;
     column_name.insert(column_name.begin(), column_name_seq.begin(),
                        column_name_seq.end());
@@ -172,7 +170,7 @@ ColumnInfo Storage::scan_column(std::uint32_t &current_addr) {
 
 bool Storage::write_binary(const void *data, std::uint32_t size,
                            std::uint32_t &current_addr) {
-    pager.write({ (char *) data, size }, current_addr);
+    pager.write(data, size, current_addr);
     current_addr += size;
     return true;
 }
@@ -281,7 +279,7 @@ ColumnInfo
 }
 
 bool Storage::insert_data(const std::string &table_name, std::int32_t key,
-                          SQLBinaryData data) {
+                          const SQLBinaryData &data) {
     auto table_info = table_info_map[ table_name ];
     table_info.b_plus_tree->insert(key, data);
     return true;

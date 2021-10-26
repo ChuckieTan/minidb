@@ -11,7 +11,7 @@ public:
     static storage::SQLBinaryData
         dump(const std::vector<ast::SQLExprValue> &values);
 
-    static std::vector<ast::SQLExprValue> load(storage::SQLBinaryData);
+    static std::vector<ast::SQLExprValue> load(const storage::SQLBinaryData &data);
 
     static const std::int8_t DATA_INT    = 0;
     static const std::int8_t DATA_FLOAT  = 1;

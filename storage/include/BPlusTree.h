@@ -20,7 +20,7 @@ public:
     BPlusTree(std::uint32_t _root, Pager &pager, Storage &_storage,
               const std::string &_table_name);
 
-    bool insert(std::int32_t key, SQLBinaryData);
+    bool insert(std::int32_t key, const SQLBinaryData &data);
     bool remove(std::int32_t key);
 
     /**

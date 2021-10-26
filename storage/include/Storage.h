@@ -48,7 +48,7 @@ public:
                                    std::uint32_t &             current_addr);
 
     bool insert_data(const std::string &table_name, std::int32_t key,
-                     SQLBinaryData data);
+                     const SQLBinaryData &data);
 
     SQLBinaryData search_data(const std::string &table_name, std::int32_t key);
 
