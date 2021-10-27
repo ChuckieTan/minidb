@@ -44,7 +44,7 @@ public:
     bool             change_root(std::uint64_t addr);
     bool             change_first_leaf(std::uint64_t addr);
     bool             change_last_leaf(std::uint64_t addr);
-    static const int order = 254;
+    static const int order = 253;
 
     bool split_leaf();
     bool split_parent();

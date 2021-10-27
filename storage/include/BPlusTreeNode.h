@@ -12,7 +12,7 @@ public:
     BPlusTreeNode(Pager &_pager);
     bool isLeaf() const;
 
-    static const int order = 254;
+    static const int order = 253;
 
     std::uint64_t              parent;
     std::uint64_t              len;
