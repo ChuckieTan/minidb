@@ -15,11 +15,15 @@
 
 namespace minidb::storage {
 
-struct FileMetaData {
-    char          tag[ 7 ] = "Minidb";
+struct IndexFileMetaData {
+    char          tag[ 13 ] = "Minidb Index";
     std::uint32_t table_num;
     std::uint32_t table_define_begin;
     std::uint32_t table_define_end;
+};
+
+struct DataFileMetaData {
+    char          tag[ 12 ] = "Minidb Data";
 };
 
 struct TableDefineMetaData {

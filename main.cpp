@@ -3,6 +3,7 @@
 #include "MinidbStrings.h"
 #include "Pager.h"
 #include "Parser.h"
+#include "SQLInsertIntoStatement.h"
 #include "SQLOperate.h"
 #include "Storage.h"
 #include "TokenType.h"

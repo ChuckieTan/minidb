@@ -57,7 +57,7 @@ storage::SQLBinaryData BPlusTree::search(std::int32_t key) {
 
     storage::SQLBinaryData data(0);
     if (addr != 0) {
-        data = pager.readRow(addr);
+        data = pager.read_row(addr);
     } else {
         spdlog::info("doesn't exists key: {}", key);
     }
@@ -68,12 +68,12 @@ bool BPlusTree::insert(std::int32_t key, const SQLBinaryData &data) {
     bool res = false;
 
     search_in_tree(key);
-    auto addr = pager.writeRow(data.data.get(), data.size);
+    auto addr = pager.write_row(data.data.get(), data.size);
     if (currentNode->can_add_entry()) {
         res = currentNode->insert_entry(key, addr);
     } else {
-        currentNode->insert_entry(key, addr);
-        res = split_leaf();
+        res = currentNode->insert_entry(key, addr);
+        res = res && split_leaf();
     }
     return res;
 }
@@ -174,7 +174,7 @@ bool BPlusTree::split_parent() {
     // 当前节点不是叶子节点，还需要更新新节点的子节点的父节点
     for (int i = 0; i < new_node->len; i++) {
         auto addr = new_node->childrenOrValue[ i ];
-        pager.write(&new_node->addr, sizeof(new_node->addr), addr);
+        pager.write_index_file(&new_node->addr, sizeof(new_node->addr), addr);
     }
 
     // 往父节点插入新节点的第一个元素
@@ -201,7 +201,7 @@ bool BPlusTree::change_root(std::uint32_t addr) {
     auto &table_info       = storage.table_info_map[ table_name ];
     auto  root_define_addr = table_info.table_root_define_addr;
     table_info.root_addr   = addr;
-    pager.write(&addr, sizeof(addr), root_define_addr);
+    pager.write_index_file(&addr, sizeof(addr), root_define_addr);
     root_addr = addr;
     return true;
 }
@@ -210,7 +210,7 @@ bool BPlusTree::change_first_leaf(std::uint32_t addr) {
     auto &table_info             = storage.table_info_map[ table_name ];
     auto  first_leaf_define_addr = table_info.first_leaf_define_addr;
     table_info.first_leaf_addr   = addr;
-    pager.write(&addr, sizeof(addr), first_leaf_define_addr);
+    pager.write_index_file(&addr, sizeof(addr), first_leaf_define_addr);
     first_leaf_addr = addr;
     return true;
 }
@@ -219,7 +219,7 @@ bool BPlusTree::change_last_leaf(std::uint32_t addr) {
     auto &table_info            = storage.table_info_map[ table_name ];
     auto  last_leaf_define_addr = table_info.last_leaf_define_addr;
     table_info.last_leaf_addr   = addr;
-    pager.write(&addr, sizeof(addr), last_leaf_define_addr);
+    pager.write_index_file(&addr, sizeof(addr), last_leaf_define_addr);
     last_leaf_addr = addr;
     return true;
 }

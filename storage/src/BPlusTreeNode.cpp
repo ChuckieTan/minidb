@@ -20,32 +20,32 @@ bool BPlusTreeNode::load(std::uint32_t _addr) {
     std::uint32_t current_addr = _addr;
 
     // 读入父节点地址
-    pager.read(&(parent), sizeof(parent), current_addr);
+    pager.read_index_file(&(parent), sizeof(parent), current_addr);
     current_addr += sizeof(parent);
 
     // 读入元素数量
-    pager.read(&(len), sizeof(len), current_addr);
+    pager.read_index_file(&(len), sizeof(len), current_addr);
     current_addr += sizeof(len);
 
     // 读入 key 列表
-    pager.read(keys.data(), sizeof(keys[ 0 ]) * order, current_addr);
+    pager.read_index_file(keys.data(), sizeof(keys[ 0 ]) * order, current_addr);
     current_addr += sizeof(keys[ 0 ]) * order;
 
     // 读入 childrenOrValue 列表
-    pager.read(childrenOrValue.data(), sizeof(childrenOrValue[ 0 ]) * order,
-               current_addr);
+    pager.read_index_file(childrenOrValue.data(),
+                          sizeof(childrenOrValue[ 0 ]) * order, current_addr);
     current_addr += sizeof(childrenOrValue[ 0 ]) * order;
 
     // 读入 _isLeaf
-    pager.read(&(_isLeaf), sizeof(_isLeaf), current_addr);
+    pager.read_index_file(&(_isLeaf), sizeof(_isLeaf), current_addr);
     current_addr += sizeof(_isLeaf);
 
     // 读入 pre_leaf
-    pager.read(&(pre_leaf), sizeof(pre_leaf), current_addr);
+    pager.read_index_file(&(pre_leaf), sizeof(pre_leaf), current_addr);
     current_addr += sizeof(pre_leaf);
 
     // 读入 next_leaf
-    pager.read(&(next_leaf), sizeof(next_leaf), current_addr);
+    pager.read_index_file(&(next_leaf), sizeof(next_leaf), current_addr);
     current_addr += sizeof(next_leaf);
 
     addr = _addr;
@@ -64,34 +64,35 @@ bool BPlusTreeNode::dump(std::uint32_t _addr) {
     }
 
     // 写入父节点地址
-    pager.write(&(parent), sizeof(parent), current_addr);
+    pager.write_index_file(&(parent), sizeof(parent), current_addr);
     current_addr += sizeof(parent);
 
     // 写入元素数量
-    pager.write(&(len), sizeof(len), current_addr
-                // namespace minidb::storage
+    pager.write_index_file(&(len), sizeof(len), current_addr
+                           // namespace minidb::storage
     );
     current_addr += sizeof(len);
 
     // 写入 key 列表
-    pager.write(keys.data(), sizeof(keys[ 0 ]) * order, current_addr);
+    pager.write_index_file(keys.data(), sizeof(keys[ 0 ]) * order,
+                           current_addr);
     current_addr += sizeof(keys[ 0 ]) * order;
 
     // 写入 childrenOrValue 列表
-    pager.write(childrenOrValue.data(), sizeof(childrenOrValue[ 0 ]) * order,
-                current_addr);
+    pager.write_index_file(childrenOrValue.data(),
+                           sizeof(childrenOrValue[ 0 ]) * order, current_addr);
     current_addr += sizeof(childrenOrValue[ 0 ]) * order;
 
     // 写入 _isLeaf
-    pager.write(&(_isLeaf), sizeof(_isLeaf), current_addr);
+    pager.write_index_file(&(_isLeaf), sizeof(_isLeaf), current_addr);
     current_addr += sizeof(_isLeaf);
 
     // 写入 pre_leaf
-    pager.write(&(pre_leaf), sizeof(pre_leaf), current_addr);
+    pager.write_index_file(&(pre_leaf), sizeof(pre_leaf), current_addr);
     current_addr += sizeof(pre_leaf);
 
     // 写入 next_leaf
-    pager.write(&(next_leaf), sizeof(next_leaf), current_addr);
+    pager.write_index_file(&(next_leaf), sizeof(next_leaf), current_addr);
     current_addr += sizeof(next_leaf);
     return true;
 }
