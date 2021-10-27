@@ -9,7 +9,7 @@ namespace minidb::operate {
 
 storage::SQLBinaryData
     BinaryOperate::dump(const std::vector<ast::SQLExprValue> &values) {
-    std::uint32_t size = 0;
+    std::uint64_t size = 0;
 
     // 计算二进制数据所需的大小
     for (const auto &value : values) {
@@ -17,12 +17,12 @@ storage::SQLBinaryData
         size += sizeof(std::uint8_t);
 
         if (value.isInt()) {
-            size += sizeof(int);
+            size += sizeof(std::uint64_t);
         } else if (value.isFloat()) {
             size += sizeof(double);
         } else if (value.isString()) {
             // 字符串长度
-            size += sizeof(std::uint32_t);
+            size += sizeof(std::uint64_t);
             size += value.getStringValue().size();
         }
     }
@@ -30,7 +30,7 @@ storage::SQLBinaryData
 
     auto addr = data.data.get();
     // dump所需要的数据
-    std::uint32_t current_offset = 0;
+    std::uint64_t current_offset = 0;
     for (const auto &value : values) {
         if (value.isInt()) {
             // 写入数据类型
@@ -61,7 +61,7 @@ storage::SQLBinaryData
             auto v = value.getStringValue();
 
             // 写入字符串长度
-            std::uint32_t str_length = v.size();
+            std::uint64_t str_length = v.size();
             std::memcpy(addr + current_offset, &str_length, sizeof(str_length));
             current_offset += sizeof(str_length);
 
@@ -78,7 +78,7 @@ std::vector<ast::SQLExprValue>
     BinaryOperate::load(const storage::SQLBinaryData &data) {
     std::vector<ast::SQLExprValue> res;
 
-    std::uint32_t current_offset = 0;
+    std::uint64_t current_offset = 0;
     while (current_offset < data.size) {
         ast::SQLExprValue item;
 
@@ -88,7 +88,7 @@ std::vector<ast::SQLExprValue>
         current_offset += sizeof(value_type);
 
         if (value_type == DATA_INT) {
-            std::int32_t value;
+            std::int64_t value;
             std::memcpy(&value, addr + current_offset, sizeof(value));
             current_offset += sizeof(value);
 
@@ -101,7 +101,7 @@ std::vector<ast::SQLExprValue>
             item = ast::SQLExprValue(value);
         } else if (value_type == DATA_STRING) {
             // 读入字符串长度
-            std::uint32_t str_length;
+            std::uint64_t str_length;
             std::memcpy(&str_length, addr + current_offset, sizeof(str_length));
             current_offset += sizeof(str_length);
 

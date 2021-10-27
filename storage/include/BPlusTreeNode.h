@@ -12,26 +12,26 @@ public:
     BPlusTreeNode(Pager &_pager);
     bool isLeaf() const;
 
-    static const int order = 256;
+    static const int order = 254;
 
-    std::uint32_t              parent;
-    std::uint32_t              len;
-    std::vector<std::int32_t>  keys;
-    std::vector<std::uint32_t> childrenOrValue;
+    std::uint64_t              parent;
+    std::uint64_t              len;
+    std::vector<std::int64_t>  keys;
+    std::vector<std::uint64_t> childrenOrValue;
 
     bool          _isLeaf;
 
-    std::uint32_t pre_leaf;
-    std::uint32_t next_leaf;
+    std::uint64_t pre_leaf;
+    std::uint64_t next_leaf;
 
     Pager &       pager;
-    std::uint32_t addr;
+    std::uint64_t addr;
 
     bool          can_add_entry() const;
-    bool          insert_entry(std::int32_t key, std::uint32_t value);
-    std::uint32_t get_entry(std::int32_t key);
+    bool          insert_entry(std::int64_t key, std::uint64_t value);
+    std::uint64_t get_entry(std::int64_t key);
 
-    bool load(std::uint32_t addr);
-    bool dump(std::uint32_t _addr = 0);
+    bool load(std::uint64_t addr);
+    bool dump(std::uint64_t _addr = 0);
 };
 } // namespace minidb::storage

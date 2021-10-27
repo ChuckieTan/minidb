@@ -9,9 +9,9 @@ namespace minidb::storage {
 class SQLBinaryData {
 public:
     std::unique_ptr<char[]> data;
-    std::uint32_t           size;
+    std::uint64_t           size;
 
-    SQLBinaryData(std::uint32_t _size)
+    SQLBinaryData(std::uint64_t _size)
         : data(new char[_size])
         , size(_size) {}
 };

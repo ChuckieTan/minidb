@@ -10,7 +10,7 @@
 #include <utility>
 namespace minidb::storage {
 
-BPlusTree::BPlusTree(std::uint32_t _root, Pager &_pager, Storage &_storage,
+BPlusTree::BPlusTree(std::uint64_t _root, Pager &_pager, Storage &_storage,
                      const std::string &_table_name)
     : currentNode(new BPlusTreeNode(_pager))
     , root_addr(_root)
@@ -38,7 +38,7 @@ BPlusTree::BPlusTree(std::uint32_t _root, Pager &_pager, Storage &_storage,
     }
 }
 
-bool BPlusTree::search_in_tree(std::int32_t key) {
+bool BPlusTree::search_in_tree(std::int64_t key) {
     currentNode->load(root_addr);
     while (!currentNode->_isLeaf) {
         auto index = std::lower_bound(currentNode->keys.begin(),
@@ -50,7 +50,7 @@ bool BPlusTree::search_in_tree(std::int32_t key) {
     return true;
 }
 
-storage::SQLBinaryData BPlusTree::search(std::int32_t key) {
+storage::SQLBinaryData BPlusTree::search(std::int64_t key) {
     search_in_tree(key);
 
     auto addr = currentNode->get_entry(key);
@@ -64,7 +64,7 @@ storage::SQLBinaryData BPlusTree::search(std::int32_t key) {
     return data;
 }
 
-bool BPlusTree::insert(std::int32_t key, const SQLBinaryData &data) {
+bool BPlusTree::insert(std::int64_t key, const SQLBinaryData &data) {
     bool res = false;
 
     search_in_tree(key);
@@ -190,14 +190,14 @@ bool BPlusTree::split_parent() {
     return true;
 }
 
-std::uint32_t BPlusTree::createNode() {
+std::uint64_t BPlusTree::createNode() {
     auto data = new char[ 4096 ];
     auto addr = pager.write_back(data, 4096);
     delete[] data;
     return addr;
 }
 
-bool BPlusTree::change_root(std::uint32_t addr) {
+bool BPlusTree::change_root(std::uint64_t addr) {
     auto &table_info       = storage.table_info_map[ table_name ];
     auto  root_define_addr = table_info.table_root_define_addr;
     table_info.root_addr   = addr;
@@ -206,7 +206,7 @@ bool BPlusTree::change_root(std::uint32_t addr) {
     return true;
 }
 
-bool BPlusTree::change_first_leaf(std::uint32_t addr) {
+bool BPlusTree::change_first_leaf(std::uint64_t addr) {
     auto &table_info             = storage.table_info_map[ table_name ];
     auto  first_leaf_define_addr = table_info.first_leaf_define_addr;
     table_info.first_leaf_addr   = addr;
@@ -215,7 +215,7 @@ bool BPlusTree::change_first_leaf(std::uint32_t addr) {
     return true;
 }
 
-bool BPlusTree::change_last_leaf(std::uint32_t addr) {
+bool BPlusTree::change_last_leaf(std::uint64_t addr) {
     auto &table_info            = storage.table_info_map[ table_name ];
     auto  last_leaf_define_addr = table_info.last_leaf_define_addr;
     table_info.last_leaf_addr   = addr;

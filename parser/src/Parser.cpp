@@ -309,7 +309,7 @@ ast::SQLExprValue Parser::numericValue(int sign, Token token) {
     if (token.tokenType == TokenType::ILLEGAL) { token = lexer.getNextToken(); }
     ast::SQLExprValue value;
     if (token.tokenType == TokenType::INTEGER) {
-        value = ast::SQLExprValue(sign * std::stoi(token.val));
+        value = ast::SQLExprValue(sign * std::stol(token.val));
     } else if (token.tokenType == TokenType::FLOAT) {
         value = ast::SQLExprValue(sign * std::stod(token.val));
     } else {

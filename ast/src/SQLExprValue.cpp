@@ -1,9 +1,15 @@
 #include "SQLExprValue.h"
+#include <cstdint>
 #include <string>
 
 namespace minidb::ast {
 
 SQLExprValue::SQLExprValue(int _value)
+    : value((std::int64_t) _value) {
+    dataType = DataType::INT;
+}
+
+SQLExprValue::SQLExprValue(std::int64_t _value)
     : value(_value) {
     dataType = DataType::INT;
 }
@@ -43,8 +49,9 @@ bool SQLExprValue::operator==(const SQLExprValue &v) const {
     return false;
 }
 
-
-int SQLExprValue::getIntValue() const { return std::get<int>(value); }
+std::int64_t SQLExprValue::getIntValue() const {
+    return std::get<std::int64_t>(value);
+}
 
 double SQLExprValue::getFloatValue() const { return std::get<double>(value); }
 

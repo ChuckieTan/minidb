@@ -49,12 +49,15 @@ Pager::Pager(const std::string &_file_name, bool _isInMemory = true)
     }
 }
 
-Pager::~Pager() { index_file.close(); }
+Pager::~Pager() {
+    index_file.close();
+    data_file.close();
+}
 
 // 往数据文件里写入一行数据，并返回首地址
-std::uint32_t Pager::write_row(void *data, std::uint32_t size,
-                               std::uint32_t pos) {
-    std::uint32_t addr = 0;
+std::uint64_t Pager::write_row(void *data, std::uint64_t size,
+                               std::uint64_t pos) {
+    std::uint64_t addr = 0;
     if (pos == 0) {
         data_file.seekp(0, data_file.end);
         addr = data_file.tellp();
@@ -69,24 +72,24 @@ std::uint32_t Pager::write_row(void *data, std::uint32_t size,
     return addr;
 }
 
-std::uint32_t Pager::write_index_file(const void *data, std::uint32_t size,
-                                      std::uint32_t pos) {
-    std::uint32_t addr = 0;
+std::uint64_t Pager::write_index_file(const void *data, std::uint64_t size,
+                                      std::uint64_t pos) {
+    std::uint64_t addr = 0;
     index_file.seekp(pos, index_file.beg);
     addr = index_file.tellp();
     index_file.write((char *) data, size);
     return addr;
 }
 
-std::uint32_t Pager::write_back(const void *data, std::uint32_t size) {
-    std::uint32_t addr = 0;
+std::uint64_t Pager::write_back(const void *data, std::uint64_t size) {
+    std::uint64_t addr = 0;
     index_file.seekp(0, index_file.end);
     addr = index_file.tellp();
     index_file.write((char *) data, size);
     return addr;
 }
 
-bool Pager::read_index_file(void *data, std::uint32_t size, std::uint32_t pos) {
+bool Pager::read_index_file(void *data, std::uint64_t size, std::uint64_t pos) {
     if (pos <= get_index_file_size()) {
         index_file.seekg(pos, index_file.beg);
         index_file.read((char *) data, size);
@@ -97,16 +100,17 @@ bool Pager::read_index_file(void *data, std::uint32_t size, std::uint32_t pos) {
     }
 }
 
-std::uint32_t Pager::write_data_file(const void *data, std::uint32_t size,
-                                     std::uint32_t pos) {
-    std::uint32_t addr = 0;
+std::uint64_t Pager::write_data_file(const void *data, std::uint64_t size,
+                                     std::uint64_t pos) {
+    std::uint64_t addr = 0;
     data_file.seekp(pos, index_file.beg);
     addr = index_file.tellp();
     data_file.write((char *) data, size);
     return addr;
 }
 
-std::uint32_t Pager::read_data_file(void *data, std::uint32_t size, std::uint32_t pos) {
+std::uint64_t Pager::read_data_file(void *data, std::uint64_t size,
+                                    std::uint64_t pos) {
     if (pos <= get_index_file_size()) {
         data_file.seekg(pos, index_file.beg);
         data_file.read((char *) data, size);
@@ -118,9 +122,9 @@ std::uint32_t Pager::read_data_file(void *data, std::uint32_t size, std::uint32_
 }
 
 // 从数据文件里读入一行数据，并返回
-storage::SQLBinaryData Pager::read_row(std::uint32_t pos) {
+storage::SQLBinaryData Pager::read_row(std::uint64_t pos) {
     if (pos <= get_index_file_size()) {
-        std::uint32_t size;
+        std::uint64_t size;
         data_file.seekg(pos, data_file.beg);
         data_file.read((char *) &size, sizeof(size));
         SQLBinaryData data(size);
@@ -134,13 +138,13 @@ storage::SQLBinaryData Pager::read_row(std::uint32_t pos) {
     }
 }
 
-std::uint32_t Pager::get_index_file_size() {
+std::uint64_t Pager::get_index_file_size() {
     index_file.seekg(0, index_file.beg);
 
-    std::uint32_t beg = index_file.tellg();
+    std::uint64_t beg = index_file.tellg();
 
     index_file.seekg(0, index_file.end);
-    std::uint32_t ed = index_file.tellg();
+    std::uint64_t ed = index_file.tellg();
     return ed - beg;
 }
 } // namespace minidb::storage

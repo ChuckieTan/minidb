@@ -16,8 +16,8 @@ BPlusTreeNode::BPlusTreeNode(Pager &_pager)
     , len(0)
     , pager(_pager) {}
 
-bool BPlusTreeNode::load(std::uint32_t _addr) {
-    std::uint32_t current_addr = _addr;
+bool BPlusTreeNode::load(std::uint64_t _addr) {
+    std::uint64_t current_addr = _addr;
 
     // 读入父节点地址
     pager.read_index_file(&(parent), sizeof(parent), current_addr);
@@ -52,8 +52,8 @@ bool BPlusTreeNode::load(std::uint32_t _addr) {
     return true;
 }
 
-bool BPlusTreeNode::dump(std::uint32_t _addr) {
-    std::uint32_t current_addr;
+bool BPlusTreeNode::dump(std::uint64_t _addr) {
+    std::uint64_t current_addr;
     if (_addr == 0) {
         // 保存到当前所存的位置
         current_addr = addr;
@@ -101,7 +101,7 @@ bool BPlusTreeNode::isLeaf() const { return _isLeaf; }
 
 bool BPlusTreeNode::can_add_entry() const { return len <= order - 2; }
 
-bool BPlusTreeNode::insert_entry(std::int32_t key, std::uint32_t value) {
+bool BPlusTreeNode::insert_entry(std::int64_t key, std::uint64_t value) {
     auto pos =
         std::lower_bound(keys.begin(), keys.begin() + len, key) - keys.begin();
     if (pos < order && keys[ pos ] == key) {
@@ -116,7 +116,7 @@ bool BPlusTreeNode::insert_entry(std::int32_t key, std::uint32_t value) {
     return true;
 }
 
-std::uint32_t BPlusTreeNode::get_entry(std::int32_t key) {
+std::uint64_t BPlusTreeNode::get_entry(std::int64_t key) {
     auto pos =
         std::lower_bound(keys.begin(), keys.begin() + len, key) - keys.begin();
     if (pos < len && keys[ pos ] == key) { return childrenOrValue[ pos ]; }

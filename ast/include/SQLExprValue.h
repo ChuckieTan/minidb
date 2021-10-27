@@ -1,21 +1,23 @@
 #pragma once
 
-#include <variant>
+#include <cstdint>
 #include <string>
+#include <variant>
 
 namespace minidb::ast {
 class SQLExprValue {
 public:
     enum class DataType { INT, FLOAT, STRING, COLUMN };
 
-    DataType                                                 dataType;
-    std::variant<int, double, std::string> value;
+    DataType                                        dataType;
+    std::variant<std::int64_t, double, std::string> value;
 
     SQLExprValue() = default;
-    SQLExprValue(int _value);
-    SQLExprValue(double _value);
-    SQLExprValue(const std::string &_value);
-    SQLExprValue(const std::string &_value, DataType _dataType);
+    explicit SQLExprValue(int _value);
+    explicit SQLExprValue(std::int64_t _value);
+    explicit SQLExprValue(double _value);
+    explicit SQLExprValue(const std::string &_value);
+    explicit SQLExprValue(const std::string &_value, DataType _dataType);
 
     bool isInt() const;
     bool isFloat() const;
@@ -24,9 +26,9 @@ public:
 
     bool operator==(const SQLExprValue &v) const;
 
-    int         getIntValue() const;
-    double      getFloatValue() const;
-    std::string getStringValue() const;
-    std::string getColumnValue() const;
+    std::int64_t getIntValue() const;
+    double       getFloatValue() const;
+    std::string  getStringValue() const;
+    std::string  getColumnValue() const;
 };
 } // namespace minidb::ast

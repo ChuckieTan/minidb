@@ -34,10 +34,10 @@ int main(int argc, char *argv[]) {
     //      token = lexer.getNextToken()) {
     //     fmt::print("{:<4} {}\n", token.tokenType, token.val);
     // }
- 
+
     // storage::Pager pager("student.db", false);
-    // std::int32_t pos = pager.write("123", sizeof("123"));
-    // std::int32_t size = pager.getSize(pos);
+    // std::int64_t pos = pager.write("123", sizeof("123"));
+    // std::int64_t size = pager.getSize(pos);
     // fmt::print("{} {}\n", pos, size);
     // std::vector<char> buffer(size);
     // pager.read(pos + sizeof(size), buffer.data(), size);
@@ -50,6 +50,6 @@ int main(int argc, char *argv[]) {
 
     operate::SQLOperate operate("student.db");
     operate.main_loop();
-    
+
     return 0;
 }

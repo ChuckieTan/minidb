@@ -54,7 +54,7 @@ TEST(Parser, InsertIntoStatement) {
     ast::SQLInsertIntoStatement statement = parser.parseInsertIntoStatement();
     EXPECT_EQ(statement.tableName, "student");
     EXPECT_EQ(statement.values,
-              std::vector<ast::SQLExprValue>({ ast::SQLExprValue(123),
+              std::vector<ast::SQLExprValue>({ ast::SQLExprValue(123l),
                                                ast::SQLExprValue("123"),
                                                ast::SQLExprValue(-1.23) }));
 }
