@@ -17,6 +17,13 @@ SQLOperate::SQLOperate(std::string &&_file_name)
     , storage(_file_name, false) {}
 
 void SQLOperate::main_loop() {
+    // for(const auto &data: *storage.table_info_map["student"].b_plus_tree) {
+    //     auto expr_list = BinaryOperate::load(data);
+    //     for(const auto& expr: expr_list) {
+    //         print_expr(expr);
+    //     }
+    //     fmt::print("\n");
+    // }
     input.readInputFromStream(std::cin);
     while (input.buffer != ".quit;") {
         lexer  = parser::Lexer(input.buffer);

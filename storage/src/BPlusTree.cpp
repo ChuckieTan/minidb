@@ -6,17 +6,23 @@
 #include "spdlog/spdlog.h"
 #include <algorithm>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 namespace minidb::storage {
 
-BPlusTree::BPlusTree(std::uint64_t _root, Pager &_pager, Storage &_storage,
-                     const std::string &_table_name)
+BPlusTree::BPlusTree(std::uint64_t _root, std::uint64_t _first_leaf_addr,
+                     std::uint64_t _last_leaf_addr, Pager &_pager,
+                     Storage &_storage, const std::string &_table_name)
     : currentNode(new BPlusTreeNode(_pager))
     , root_addr(_root)
+    , first_leaf_addr(_first_leaf_addr)
+    , last_leaf_addr(_last_leaf_addr)
     , pager(_pager)
     , storage(_storage)
-    , table_name(_table_name) {
+    , table_name(_table_name)
+    , _end(_pager) {
     if (_root == 0) {
         // 如果树为空
         spdlog::info(
@@ -36,6 +42,9 @@ BPlusTree::BPlusTree(std::uint64_t _root, Pager &_pager, Storage &_storage,
     } else {
         currentNode->load(_root);
     }
+
+    _end.current_node->load(last_leaf_addr);
+    _end.current_record_offset = _end.current_node->len;
 }
 
 bool BPlusTree::search_in_tree(std::int64_t key) {
@@ -222,6 +231,60 @@ bool BPlusTree::change_last_leaf(std::uint64_t addr) {
     pager.write_index_file(&addr, sizeof(addr), last_leaf_define_addr);
     last_leaf_addr = addr;
     return true;
+}
+
+BPlusTree::iterator::BPlusTreeIterator(Pager &pager)
+    : current_record_offset(0)
+    , current_node(new BPlusTreeNode(pager)) {}
+
+BPlusTree::iterator::BPlusTreeIterator(const BPlusTreeIterator &it) {
+    current_node          = it.current_node;
+    current_record_offset = it.current_record_offset;
+}
+
+SQLBinaryData BPlusTree::iterator::operator*() {
+    return current_node->pager.read_row(
+        current_node->childrenOrValue[ current_record_offset ]);
+}
+
+BPlusTree::iterator &BPlusTree::iterator::operator++() {
+    // 如果当前节点是最后一个节点，则可以一直加到 len，此时迭代器为 end
+    if (current_node->next_leaf == 0) {
+        if (current_record_offset == current_node->len) {
+            return *this;
+        } else {
+            current_record_offset++;
+        }
+    } else {
+        // 如果不是最后一个节点，处于最后一个记录时加载下一个节点
+        if (current_record_offset == current_node->len - 1) {
+            current_node->load(current_node->next_leaf);
+            current_record_offset = 0;
+        } else {
+            current_record_offset++;
+        }
+    }
+    return *this;
+}
+
+bool BPlusTree::iterator::operator!=(const BPlusTreeIterator &that) {
+    return !(current_node->addr == that.current_node->addr &&
+             current_record_offset == that.current_record_offset);
+}
+
+BPlusTree::iterator BPlusTree::begin() {
+    iterator iter(pager);
+    iter.current_node->load(first_leaf_addr);
+    iter.current_record_offset = 0;
+    return iter;
+}
+
+BPlusTree::iterator &BPlusTree::end() {
+    if (_end.current_node->addr != last_leaf_addr) {
+        _end.current_node->load(last_leaf_addr);
+    }
+    _end.current_record_offset = _end.current_node->len;
+    return _end;
 }
 
 } // namespace minidb::storage

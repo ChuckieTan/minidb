@@ -24,10 +24,6 @@
 
 #define FUNC(fun) std::function([ & ]() -> bool { return fun(); })
 
-#ifdef DEBUG
-int indent = 0;
-#endif
-
 namespace minidb::parser {
 
 Parser::MatchType::MatchType(const std::string &str) {

@@ -13,7 +13,7 @@
 namespace minidb::storage {
 
 static char index_tag[ 13 ] = "Minidb Index";
-static char data_tag[ 12 ] = "Minidb Data";
+static char data_tag[ 12 ]  = "Minidb Data";
 
 // struct FileMetaData {
 //     char          tag[ 7 ] = "Minidb";
@@ -69,9 +69,10 @@ Storage::Storage(const std::string &_fileName, bool _isInMemory)
         std::uint64_t current_addr = 0;
         write_binary(&index_file_meta_data, sizeof(index_file_meta_data),
                      current_addr);
-        
+
         DataFileMetaData data_file_meta_data;
-        pager.write_data_file(&data_file_meta_data, sizeof(data_file_meta_data), 0);
+        pager.write_data_file(&data_file_meta_data, sizeof(data_file_meta_data),
+                              0);
     } else if (file_size >= 4096) {
         std::uint64_t current_addr = 0;
 
@@ -89,8 +90,8 @@ Storage::Storage(const std::string &_fileName, bool _isInMemory)
 
         DataFileMetaData data_file_meta_data;
 
-        pager.read_data_file(&data_file_meta_data,
-                              sizeof(data_file_meta_data), 0);
+        pager.read_data_file(&data_file_meta_data, sizeof(data_file_meta_data),
+                             0);
         // 判断文件开头是否有 Minidb 标识
         if (std::strcmp(data_file_meta_data.tag, data_tag) != 0) {
             spdlog::error("{} is not a Minidb database file", _fileName);
@@ -120,8 +121,9 @@ bool Storage::scan_tables() {
         // 只能在添加到 table_info_map 后才能生成，
         // 因为生成新树需要修改 table_info_map
         table_info_map[ table_info.tableName ].b_plus_tree =
-            std::make_shared<BPlusTree>(table_info.root_addr, pager, *this,
-                                        table_info.tableName);
+            std::make_shared<BPlusTree>(
+                table_info.root_addr, table_info.first_leaf_addr,
+                table_info.last_leaf_addr, pager, *this, table_info.tableName);
     }
     table_define_end = current_addr;
     return true;
@@ -270,7 +272,8 @@ bool Storage::new_table(const ast::SQLCreateTableStatement &create_statement) {
     // 只能在添加到 table_info_map 后才能生成，
     // 因为生成新树需要修改 table_info_map
     table_info_map[ table_name ].b_plus_tree = std::make_shared<BPlusTree>(
-        table_info.root_addr, pager, *this, table_info.tableName);
+        table_info.root_addr, table_info.first_leaf_addr,
+        table_info.last_leaf_addr, pager, *this, table_info.tableName);
 
     spdlog::info("create a new table: {}", table_name);
     return true;
