@@ -35,8 +35,8 @@ public:
     bool             change_root(std::uint64_t addr);
     bool             change_first_leaf(std::uint64_t addr);
     bool             change_last_leaf(std::uint64_t addr);
-    // static const int order = 4;
-    static const int order = 253;
+    static const int order = 4;
+    // static const int order = 253;
 
     bool split_leaf();
     bool split_parent();
@@ -59,7 +59,7 @@ public:
     iterator &end();
 
 private:
-    std::shared_ptr<BPlusTreeNode> currentNode;
+    std::shared_ptr<BPlusTreeNode> current_node;
 
     std::uint64_t root_addr;
     std::string   table_name;

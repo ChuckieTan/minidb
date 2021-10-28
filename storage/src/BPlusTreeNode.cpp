@@ -9,7 +9,7 @@ namespace minidb::storage {
 BPlusTreeNode::BPlusTreeNode(Pager &_pager)
     : parent(0)
     , keys(order)
-    , childrenOrValue(order)
+    , children_or_value(order)
     , _isLeaf(true)
     , pre_leaf(0)
     , next_leaf(0)
@@ -32,9 +32,9 @@ bool BPlusTreeNode::load(std::uint64_t _addr) {
     current_addr += sizeof(keys[ 0 ]) * order;
 
     // 读入 childrenOrValue 列表
-    pager.read_index_file(childrenOrValue.data(),
-                          sizeof(childrenOrValue[ 0 ]) * order, current_addr);
-    current_addr += sizeof(childrenOrValue[ 0 ]) * order;
+    pager.read_index_file(children_or_value.data(),
+                          sizeof(children_or_value[ 0 ]) * order, current_addr);
+    current_addr += sizeof(children_or_value[ 0 ]) * order;
 
     // 读入 _isLeaf
     pager.read_index_file(&(_isLeaf), sizeof(_isLeaf), current_addr);
@@ -79,9 +79,10 @@ bool BPlusTreeNode::dump(std::uint64_t _addr) {
     current_addr += sizeof(keys[ 0 ]) * order;
 
     // 写入 childrenOrValue 列表
-    pager.write_index_file(childrenOrValue.data(),
-                           sizeof(childrenOrValue[ 0 ]) * order, current_addr);
-    current_addr += sizeof(childrenOrValue[ 0 ]) * order;
+    pager.write_index_file(children_or_value.data(),
+                           sizeof(children_or_value[ 0 ]) * order,
+                           current_addr);
+    current_addr += sizeof(children_or_value[ 0 ]) * order;
 
     // 写入 _isLeaf
     pager.write_index_file(&(_isLeaf), sizeof(_isLeaf), current_addr);
@@ -110,7 +111,7 @@ bool BPlusTreeNode::insert_entry(std::int64_t key, std::uint64_t value) {
     }
 
     keys.insert(keys.begin() + pos, key);
-    childrenOrValue.insert(childrenOrValue.begin() + pos, value);
+    children_or_value.insert(children_or_value.begin() + pos, value);
     len++;
     dump();
     return true;
@@ -119,7 +120,7 @@ bool BPlusTreeNode::insert_entry(std::int64_t key, std::uint64_t value) {
 std::uint64_t BPlusTreeNode::get_entry(std::int64_t key) {
     auto pos =
         std::lower_bound(keys.begin(), keys.begin() + len, key) - keys.begin();
-    if (pos < len && keys[ pos ] == key) { return childrenOrValue[ pos ]; }
+    if (pos < len && keys[ pos ] == key) { return children_or_value[ pos ]; }
     return 0;
 }
 

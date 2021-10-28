@@ -18,7 +18,7 @@ public:
     std::uint64_t              parent;
     std::uint64_t              len;
     std::vector<std::int64_t>  keys;
-    std::vector<std::uint64_t> childrenOrValue;
+    std::vector<std::uint64_t> children_or_value;
 
     bool          _isLeaf;
 
