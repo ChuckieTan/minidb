@@ -112,7 +112,7 @@ Storage::Storage(const std::string &_fileName, bool _isInMemory)
 bool Storage::scan_tables() {
     // 循环获取所有表的表名和地址
     std::uint64_t current_addr = table_define_begin;
-    for (std::uint64_t i = 0; i < table_num; i++) {
+    for (std::uint32_t i = 0; i < table_num; i++) {
         TableInfo table_info = scan_table(current_addr);
         spdlog::info("scan table {}", table_info.tableName);
         table_info_map[ table_info.tableName ] = table_info;

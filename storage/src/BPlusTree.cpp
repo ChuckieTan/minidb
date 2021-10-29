@@ -36,7 +36,7 @@ BPlusTree::BPlusTree(std::uint64_t _root, std::uint64_t _first_leaf_addr,
         change_last_leaf(_root_addr);
 
         current_node->parent    = 0;
-        current_node->_isLeaf   = true;
+        current_node->_is_leaf  = true;
         current_node->next_leaf = 0;
         current_node->dump(_root_addr);
     } else {
@@ -49,10 +49,11 @@ BPlusTree::BPlusTree(std::uint64_t _root, std::uint64_t _first_leaf_addr,
 
 bool BPlusTree::search_in_tree(std::int64_t key) {
     current_node->load(root_addr);
-    while (!current_node->_isLeaf) {
-        auto index = std::lower_bound(current_node->keys.begin(),
-                                      current_node->keys.end(), key) -
-                     current_node->keys.begin();
+    while (!current_node->_is_leaf) {
+        auto index = std::upper_bound(
+                         current_node->keys.begin(),
+                         current_node->keys.begin() + current_node->len, key) -
+                     current_node->keys.begin(); 
         auto addr = current_node->children_or_value[ index ];
         current_node->load(addr);
     }
@@ -90,12 +91,14 @@ bool BPlusTree::insert(std::int64_t key, const SQLBinaryData &data) {
 bool BPlusTree::split_leaf() {
     // 如果当前节点是根节点，那需要新建一个根节点作为分裂后节点的父节点
     if (current_node->addr == root_addr) {
-        auto new_root     = new BPlusTreeNode(pager);
-        new_root->parent  = 0;
-        new_root->_isLeaf = false;
-        new_root->len     = 0;
-        new_root->dump(true);
-        current_node->parent = new_root->addr;
+        auto new_root                    = new BPlusTreeNode(pager);
+        new_root->parent                 = 0;
+        new_root->len                    = 0;
+        new_root->_is_leaf               = false;
+        new_root->addr                   = createNode();
+        new_root->children_or_value[ 0 ] = current_node->addr;
+        current_node->parent             = new_root->addr;
+        new_root->dump();
         change_root(new_root->addr);
         delete new_root;
     }
@@ -113,7 +116,7 @@ bool BPlusTree::split_leaf() {
     new_node->len     = order - order / 2;
 
     // 分裂出来的节点还是叶子节点
-    new_node->_isLeaf = true;
+    new_node->_is_leaf = true;
 
     // 获取 new_node 的磁盘地址
     new_node->addr = createNode();
@@ -147,18 +150,21 @@ bool BPlusTree::split_leaf() {
         // 分裂父节点
         res = res && split_parent();
     }
+    delete new_node;
     return res;
 }
 
 bool BPlusTree::split_parent() {
     // 如果当前节点是根节点，那需要新建一个根节点作为分裂后节点的父节点
     if (current_node->addr == root_addr) {
-        auto new_root     = new BPlusTreeNode(pager);
-        new_root->parent  = 0;
-        new_root->_isLeaf = false;
-        new_root->len     = 0;
+        auto new_root                    = new BPlusTreeNode(pager);
+        new_root->parent                 = 0;
+        new_root->_is_leaf               = false;
+        new_root->len                    = 0;
+        new_root->addr                   = createNode();
+        new_root->children_or_value[ 0 ] = current_node->addr;
+        current_node->parent             = new_root->addr;
         new_root->dump();
-        current_node->parent = new_root->addr;
         change_root(new_root->addr);
         delete new_root;
     }
@@ -173,30 +179,37 @@ bool BPlusTree::split_parent() {
         new_node->children_or_value[ i - order / 2 ] =
             current_node->children_or_value[ i ];
     }
-    current_node->len = order / 2;
+    // 对于非叶子节点，children 比 key 多一
+    new_node->children_or_value[ current_node->len - order / 2 ] =
+        current_node->children_or_value[ current_node->len ];
+    // current_node 需要上升一个记录到父节点
+    current_node->len = order / 2 - 1;
     new_node->len     = order - order / 2;
 
-    new_node->_isLeaf = false;
+    new_node->_is_leaf = false;
 
     current_node->dump();
     new_node->dump();
 
     // 当前节点不是叶子节点，还需要更新新节点的子节点的父节点
-    for (int i = 0; i < new_node->len; i++) {
+    for (int i = 0; i < new_node->len + 1; i++) {
         auto addr = new_node->children_or_value[ i ];
         pager.write_index_file(&new_node->addr, sizeof(new_node->addr), addr);
     }
 
-    // 往父节点插入新节点的第一个元素
+    // 旧节点的最后一个元素上升到父节点
+    auto k = current_node->keys[ current_node->len ];
+    auto v = new_node->addr;
     current_node->load(parent);
     //* currentNode 现在为 parent
     if (current_node->can_add_entry()) {
-        current_node->insert_entry(new_node->keys[ 0 ], new_node->addr);
+        current_node->insert_entry(k, v);
     } else {
-        current_node->insert_entry(new_node->keys[ 0 ], new_node->addr);
+        current_node->insert_entry(k, v);
         // 分裂父节点
         split_parent();
     }
+    delete new_node;
     return true;
 }
 

@@ -9,8 +9,8 @@ namespace minidb::storage {
 BPlusTreeNode::BPlusTreeNode(Pager &_pager)
     : parent(0)
     , keys(order)
-    , children_or_value(order)
-    , _isLeaf(true)
+    , children_or_value(order + 1)
+    , _is_leaf(true)
     , pre_leaf(0)
     , next_leaf(0)
     , len(0)
@@ -37,8 +37,8 @@ bool BPlusTreeNode::load(std::uint64_t _addr) {
     current_addr += sizeof(children_or_value[ 0 ]) * order;
 
     // 读入 _isLeaf
-    pager.read_index_file(&(_isLeaf), sizeof(_isLeaf), current_addr);
-    current_addr += sizeof(_isLeaf);
+    pager.read_index_file(&(_is_leaf), sizeof(_is_leaf), current_addr);
+    current_addr += sizeof(_is_leaf);
 
     // 读入 pre_leaf
     pager.read_index_file(&(pre_leaf), sizeof(pre_leaf), current_addr);
@@ -85,8 +85,8 @@ bool BPlusTreeNode::dump(std::uint64_t _addr) {
     current_addr += sizeof(children_or_value[ 0 ]) * order;
 
     // 写入 _isLeaf
-    pager.write_index_file(&(_isLeaf), sizeof(_isLeaf), current_addr);
-    current_addr += sizeof(_isLeaf);
+    pager.write_index_file(&(_is_leaf), sizeof(_is_leaf), current_addr);
+    current_addr += sizeof(_is_leaf);
 
     // 写入 pre_leaf
     pager.write_index_file(&(pre_leaf), sizeof(pre_leaf), current_addr);
@@ -98,7 +98,7 @@ bool BPlusTreeNode::dump(std::uint64_t _addr) {
     return true;
 }
 
-bool BPlusTreeNode::isLeaf() const { return _isLeaf; }
+bool BPlusTreeNode::is_leaf() const { return _is_leaf; }
 
 bool BPlusTreeNode::can_add_entry() const { return len <= order - 2; }
 
@@ -109,9 +109,12 @@ bool BPlusTreeNode::insert_entry(std::int64_t key, std::uint64_t value) {
         spdlog::error("already exists key: {}", key);
         return false;
     }
-
     keys.insert(keys.begin() + pos, key);
-    children_or_value.insert(children_or_value.begin() + pos, value);
+    if (is_leaf()) {
+        children_or_value.insert(children_or_value.begin() + pos, value);
+    } else {
+        children_or_value.insert(children_or_value.begin() + pos + 1, value);
+    }
     len++;
     dump();
     return true;
