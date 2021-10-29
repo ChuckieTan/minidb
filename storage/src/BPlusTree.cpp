@@ -67,7 +67,7 @@ storage::SQLBinaryData BPlusTree::search(std::int64_t key) {
     auto addr = current_node->get_entry(key);
 
     storage::SQLBinaryData data(0);
-    if (addr != 0) {
+    if (addr != 0 && addr != ULLONG_MAX) {
         data = pager.read_row(addr);
     } else {
         spdlog::info("doesn't exists key: {}", key);

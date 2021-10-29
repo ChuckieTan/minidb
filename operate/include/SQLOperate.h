@@ -15,6 +15,7 @@ public:
     bool create_table_operate();
     bool insert_operate();
     bool select_operate();
+    bool delete_operate();
     void print_expr(const ast::SQLExprValue &v);
 
     util::Input      input;

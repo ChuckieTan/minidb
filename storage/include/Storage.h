@@ -23,7 +23,7 @@ struct IndexFileMetaData {
 };
 
 struct DataFileMetaData {
-    char          tag[ 12 ] = "Minidb Data";
+    char tag[ 12 ] = "Minidb Data";
 };
 
 struct TableDefineMetaData {
@@ -56,6 +56,8 @@ public:
 
     SQLBinaryData search_data(const std::string &table_name, std::int64_t key);
 
+    bool delete_data(const std::string &table_name, std::int64_t key);
+    
     /**
      * @brief 写入指定大小的二进制数据，同时使current_addr往后移动
      */

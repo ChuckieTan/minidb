@@ -36,6 +36,9 @@ void SQLOperate::main_loop() {
         } else if (lexer.getCurrentToken().tokenType ==
                    parser::TokenType::SELECT) {
             select_operate();
+        } else if (lexer.getCurrentToken().tokenType ==
+                   parser::TokenType::DELETE) {
+            delete_operate();
         }
         input.readInputFromStream(std::cin);
     }
@@ -66,13 +69,34 @@ bool SQLOperate::select_operate() {
                 storage.search_data(statement.tableSource,
                                     statement.where.expr.rValue.getIntValue());
             auto expr_list = BinaryOperate::load(data);
-            for (const auto &v :expr_list) {
+            for (const auto &v : expr_list) {
                 print_expr(v);
             }
             fmt::print("\n");
         } else {
         }
     } else {
+    }
+    return true;
+}
+
+bool SQLOperate::delete_operate() {
+    bool res       = false;
+    auto statement = parser.parseDeleteStatement();
+    if (statement.isWhereExists) {
+        if (statement.where.expr.lValue.getStringValue() == "id" &&
+            statement.where.expr.op == parser::TokenType::ASSIGN) {
+            res =
+                storage.delete_data(statement.tableSource,
+                                    statement.where.expr.rValue.getIntValue());
+        } else {
+        }
+    } else {
+    }
+    if (res) {
+        spdlog::info("delete successful");
+    } else {
+        spdlog::warn("delete failed");
     }
 }
 

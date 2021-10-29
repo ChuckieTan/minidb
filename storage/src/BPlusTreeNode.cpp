@@ -142,6 +142,7 @@ bool BPlusTreeNode::remove_entry(std::int64_t key) {
         std::lower_bound(keys.begin(), keys.begin() + len, key) - keys.begin();
     if (pos < len && keys[ pos ] == key) {
         children_or_value[ pos ] = ULLONG_MAX;
+        dump();
         return true;
     } else {
         return false;

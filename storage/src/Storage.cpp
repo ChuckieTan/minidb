@@ -316,8 +316,26 @@ bool Storage::insert_data(const std::string &table_name, std::int64_t key,
 
 SQLBinaryData Storage::search_data(const std::string &table_name,
                                    std::int64_t       key) {
-    auto table_info = table_info_map[ table_name ];
-    return table_info.b_plus_tree->search(key);
+    auto iter = table_info_map.find(table_name);
+    if (iter != table_info_map.end()) {
+        auto table_info = iter->second;
+        return table_info.b_plus_tree->search(key);
+    } else {
+        spdlog::error("doesn't exists table: {}", table_name);
+    }
+}
+
+bool Storage::delete_data(const std::string &table_name, std::int64_t key) {
+    bool res  = false;
+    auto iter = table_info_map.find(table_name);
+    if (iter != table_info_map.end()) {
+        auto table_info = iter->second;
+        res             = table_info.b_plus_tree->remove(key);
+    } else {
+        res = false;
+        spdlog::error("doesn't exists table: {}", table_name);
+    }
+    return res;
 }
 
 } // namespace minidb::storage
