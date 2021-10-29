@@ -31,7 +31,7 @@ public:
     Pager &       pager;
     std::uint64_t addr;
 
-    bool can_add_entry() const;
+    bool need_split() const;
     bool can_remove_entry() const;
 
     bool          insert_entry(std::int64_t key, std::uint64_t value);

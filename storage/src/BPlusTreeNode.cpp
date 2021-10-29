@@ -2,6 +2,7 @@
 #include "Pager.h"
 
 #include <algorithm>
+#include <climits>
 #include <spdlog/spdlog.h>
 
 namespace minidb::storage {
@@ -100,7 +101,7 @@ bool BPlusTreeNode::dump(std::uint64_t _addr) {
 
 bool BPlusTreeNode::is_leaf() const { return _is_leaf; }
 
-bool BPlusTreeNode::can_add_entry() const { return len <= order - 2; }
+bool BPlusTreeNode::need_split() const { return len > order - 1; }
 
 bool BPlusTreeNode::insert_entry(std::int64_t key, std::uint64_t value) {
     auto pos =
@@ -128,5 +129,16 @@ std::uint64_t BPlusTreeNode::get_entry(std::int64_t key) {
 }
 
 bool BPlusTreeNode::can_remove_entry() const { return len >= order / 2; }
+
+bool BPlusTreeNode::remove_entry(std::int64_t key) {
+    auto pos =
+        std::lower_bound(keys.begin(), keys.begin() + len, key) - keys.begin();
+    if (pos < len && keys[ pos ] == key) {
+        children_or_value[ pos ] = ULLONG_MAX;
+        return true;
+    } else {
+        return false;
+    }
+}
 
 } // namespace minidb::storage

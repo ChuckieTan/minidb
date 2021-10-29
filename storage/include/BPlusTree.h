@@ -38,8 +38,6 @@ public:
     bool split_leaf();
     bool split_parent();
 
-    bool merge_leaf();
-
     class BPlusTreeIterator {
     public:
         BPlusTreeIterator(Pager &pager);

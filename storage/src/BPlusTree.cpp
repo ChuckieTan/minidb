@@ -79,12 +79,8 @@ bool BPlusTree::insert(std::int64_t key, const SQLBinaryData &data) {
 
     search_in_tree(key);
     auto addr = pager.write_row(data.data.get(), data.size);
-    if (current_node->can_add_entry()) {
-        res = current_node->insert_entry(key, addr);
-    } else {
-        res = current_node->insert_entry(key, addr);
-        res = res && split_leaf();
-    }
+    res       = current_node->insert_entry(key, addr);
+    if (current_node->need_split()) { res = res && split_leaf(); }
     return res;
 }
 
@@ -103,7 +99,7 @@ bool BPlusTree::split_leaf() {
         delete new_root;
     }
     auto parent      = current_node->parent;
-    auto new_node    = new BPlusTreeNode(pager);
+    auto new_node    = std::unique_ptr<BPlusTreeNode>(new BPlusTreeNode(pager));
     new_node->parent = parent;
 
     // 复制一半元素
@@ -142,22 +138,19 @@ bool BPlusTree::split_leaf() {
 
     current_node->load(parent);
     //* currentNode 现在为 parent
-    bool res = false;
-    if (current_node->can_add_entry()) {
-        res = current_node->insert_entry(new_node->keys[ 0 ], new_node->addr);
-    } else {
-        res = current_node->insert_entry(new_node->keys[ 0 ], new_node->addr);
+    bool res = current_node->insert_entry(new_node->keys[ 0 ], new_node->addr);
+    if (current_node->need_split()) {
         // 分裂父节点
         res = res && split_parent();
     }
-    delete new_node;
     return res;
 }
 
 bool BPlusTree::split_parent() {
     // 如果当前节点是根节点，那需要新建一个根节点作为分裂后节点的父节点
     if (current_node->addr == root_addr) {
-        auto new_root                    = new BPlusTreeNode(pager);
+        auto new_root =
+            std::unique_ptr<BPlusTreeNode>(new BPlusTreeNode(pager));
         new_root->parent                 = 0;
         new_root->_is_leaf               = false;
         new_root->len                    = 0;
@@ -166,10 +159,9 @@ bool BPlusTree::split_parent() {
         current_node->parent             = new_root->addr;
         new_root->dump();
         change_root(new_root->addr);
-        delete new_root;
     }
     auto parent      = current_node->parent;
-    auto new_node    = new BPlusTreeNode(pager);
+    auto new_node    = std::unique_ptr<BPlusTreeNode>(new BPlusTreeNode(pager));
     new_node->parent = parent;
     new_node->addr   = pager.new_page();
 
@@ -202,27 +194,18 @@ bool BPlusTree::split_parent() {
     auto v = new_node->addr;
     current_node->load(parent);
     //* currentNode 现在为 parent
-    if (current_node->can_add_entry()) {
-        current_node->insert_entry(k, v);
-    } else {
-        current_node->insert_entry(k, v);
+    bool res = current_node->insert_entry(k, v);
+    if (current_node->need_split()) {
         // 分裂父节点
         split_parent();
     }
-    delete new_node;
-    return true;
+    return res;
 }
 
 bool BPlusTree::remove(std::int64_t key) {
     bool res = false;
-
     search_in_tree(key);
-    if (current_node->addr == root_addr && current_node->can_remove_entry()) {
-        res = current_node->remove_entry(key);
-    } else {
-        res = current_node->remove_entry(key);
-        res = res && split_leaf();
-    }
+    res = current_node->remove_entry(key);
     return res;
 }
 
