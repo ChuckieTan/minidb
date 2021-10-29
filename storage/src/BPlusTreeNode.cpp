@@ -106,17 +106,24 @@ bool BPlusTreeNode::need_split() const { return len > order - 1; }
 bool BPlusTreeNode::insert_entry(std::int64_t key, std::uint64_t value) {
     auto pos =
         std::lower_bound(keys.begin(), keys.begin() + len, key) - keys.begin();
-    if (pos < order && keys[ pos ] == key) {
+    if (pos < order && keys[ pos ] == key &&
+        children_or_value[ pos ] != ULLONG_MAX) {
         spdlog::error("already exists key: {}", key);
         return false;
     }
-    keys.insert(keys.begin() + pos, key);
-    if (is_leaf()) {
-        children_or_value.insert(children_or_value.begin() + pos, value);
+    if (pos < order && keys[ pos ] == key &&
+        children_or_value[ pos ] == ULLONG_MAX) {
+        children_or_value[ pos ] = value;
     } else {
-        children_or_value.insert(children_or_value.begin() + pos + 1, value);
+        keys.insert(keys.begin() + pos, key);
+        if (is_leaf()) {
+            children_or_value.insert(children_or_value.begin() + pos, value);
+        } else {
+            children_or_value.insert(children_or_value.begin() + pos + 1,
+                                     value);
+        }
+        len++;
     }
-    len++;
     dump();
     return true;
 }
