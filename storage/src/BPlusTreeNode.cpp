@@ -127,4 +127,6 @@ std::uint64_t BPlusTreeNode::get_entry(std::int64_t key) {
     return 0;
 }
 
+bool BPlusTreeNode::can_remove_entry() const { return len >= order / 2; }
+
 } // namespace minidb::storage

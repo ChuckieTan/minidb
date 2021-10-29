@@ -20,7 +20,7 @@ public:
     std::uint64_t write_index_file(const void *data, std::uint64_t size,
                                    std::uint64_t pos);
 
-    std::uint64_t write_back(const void *data, std::uint64_t size);
+    std::uint64_t new_page();
 
     std::uint64_t write_data_file(const void *data, std::uint64_t size,
                                   std::uint64_t pos);

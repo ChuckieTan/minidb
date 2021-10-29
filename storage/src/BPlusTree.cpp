@@ -29,7 +29,7 @@ BPlusTree::BPlusTree(std::uint64_t _root, std::uint64_t _first_leaf_addr,
             "table: {} root node doesn't exist, create a new root node",
             table_name);
 
-        auto _root_addr = createNode();
+        auto _root_addr = pager.new_page();
 
         change_root(_root_addr);
         change_first_leaf(_root_addr);
@@ -53,7 +53,7 @@ bool BPlusTree::search_in_tree(std::int64_t key) {
         auto index = std::upper_bound(
                          current_node->keys.begin(),
                          current_node->keys.begin() + current_node->len, key) -
-                     current_node->keys.begin(); 
+                     current_node->keys.begin();
         auto addr = current_node->children_or_value[ index ];
         current_node->load(addr);
     }
@@ -95,7 +95,7 @@ bool BPlusTree::split_leaf() {
         new_root->parent                 = 0;
         new_root->len                    = 0;
         new_root->_is_leaf               = false;
-        new_root->addr                   = createNode();
+        new_root->addr                   = pager.new_page();
         new_root->children_or_value[ 0 ] = current_node->addr;
         current_node->parent             = new_root->addr;
         new_root->dump();
@@ -119,7 +119,7 @@ bool BPlusTree::split_leaf() {
     new_node->_is_leaf = true;
 
     // 获取 new_node 的磁盘地址
-    new_node->addr = createNode();
+    new_node->addr = pager.new_page();
 
     // 设置 pre_leaf 和 next_leaf
     new_node->pre_leaf  = current_node->addr;
@@ -161,7 +161,7 @@ bool BPlusTree::split_parent() {
         new_root->parent                 = 0;
         new_root->_is_leaf               = false;
         new_root->len                    = 0;
-        new_root->addr                   = createNode();
+        new_root->addr                   = pager.new_page();
         new_root->children_or_value[ 0 ] = current_node->addr;
         current_node->parent             = new_root->addr;
         new_root->dump();
@@ -171,7 +171,7 @@ bool BPlusTree::split_parent() {
     auto parent      = current_node->parent;
     auto new_node    = new BPlusTreeNode(pager);
     new_node->parent = parent;
-    new_node->addr   = createNode();
+    new_node->addr   = pager.new_page();
 
     // 复制一半元素
     for (int i = order / 2; i < current_node->len; i++) {
@@ -213,11 +213,17 @@ bool BPlusTree::split_parent() {
     return true;
 }
 
-std::uint64_t BPlusTree::createNode() {
-    auto data = new char[ 4096 ];
-    auto addr = pager.write_back(data, 4096);
-    delete[] data;
-    return addr;
+bool BPlusTree::remove(std::int64_t key) {
+    bool res = false;
+
+    search_in_tree(key);
+    if (current_node->addr == root_addr && current_node->can_remove_entry()) {
+        res = current_node->remove_entry(key);
+    } else {
+        res = current_node->remove_entry(key);
+        res = res && split_leaf();
+    }
+    return res;
 }
 
 bool BPlusTree::change_root(std::uint64_t addr) {

@@ -22,16 +22,13 @@ public:
               std::uint64_t _last_leaf_addr, Pager &_pager, Storage &_storage,
               const std::string &_table_name);
 
-    bool insert(std::int64_t key, const SQLBinaryData &data);
-    bool remove(std::int64_t key);
-
+    // 定位 currentNode 到 key 所应该在的节点
+    bool search_in_tree(std::int64_t key);
     // 返回 key 所对应的数据的字节流
     storage::SQLBinaryData search(std::int64_t key);
+    bool                   insert(std::int64_t key, const SQLBinaryData &data);
+    bool                   remove(std::int64_t key);
 
-    // @brief 定位 currentNode 到 key 所应该在的节点
-    bool search_in_tree(std::int64_t key);
-
-    std::uint64_t    createNode();
     bool             change_root(std::uint64_t addr);
     bool             change_first_leaf(std::uint64_t addr);
     bool             change_last_leaf(std::uint64_t addr);
@@ -40,6 +37,8 @@ public:
 
     bool split_leaf();
     bool split_parent();
+
+    bool merge_leaf();
 
     class BPlusTreeIterator {
     public:
