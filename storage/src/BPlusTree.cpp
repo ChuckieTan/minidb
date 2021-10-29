@@ -5,6 +5,7 @@
 #include "Storage.h"
 #include "spdlog/spdlog.h"
 #include <algorithm>
+#include <climits>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -87,19 +88,19 @@ bool BPlusTree::insert(std::int64_t key, const SQLBinaryData &data) {
 bool BPlusTree::split_leaf() {
     // 如果当前节点是根节点，那需要新建一个根节点作为分裂后节点的父节点
     if (current_node->addr == root_addr) {
-        auto new_root                    = new BPlusTreeNode(pager);
-        new_root->parent                 = 0;
-        new_root->len                    = 0;
-        new_root->_is_leaf               = false;
-        new_root->addr                   = pager.new_page();
+        auto new_root      = std::make_unique<BPlusTreeNode>(pager);
+        new_root->parent   = 0;
+        new_root->len      = 0;
+        new_root->_is_leaf = false;
+        new_root->addr     = pager.new_page();
         new_root->children_or_value[ 0 ] = current_node->addr;
         current_node->parent             = new_root->addr;
         new_root->dump();
         change_root(new_root->addr);
-        delete new_root;
+        change_first_leaf(current_node->addr);
     }
     auto parent      = current_node->parent;
-    auto new_node    = std::unique_ptr<BPlusTreeNode>(new BPlusTreeNode(pager));
+    auto new_node    = std::make_unique<BPlusTreeNode>(pager);
     new_node->parent = parent;
 
     // 复制一半元素
@@ -123,18 +124,20 @@ bool BPlusTree::split_leaf() {
 
     // 如果后面还有 leaf 的话，得设置后面 leaf 的 pre_leaf 指针
     if (current_node->next_leaf != 0) {
-        auto next_next_leaf = new BPlusTreeNode(pager);
+        auto next_next_leaf = std::make_unique<BPlusTreeNode>(pager);
         next_next_leaf->load(current_node->next_leaf);
 
         next_next_leaf->pre_leaf = new_node->addr;
         next_next_leaf->dump();
-
-        delete next_next_leaf;
     }
     current_node->next_leaf = new_node->addr;
 
     current_node->dump();
     new_node->dump();
+
+    if (current_node->addr == last_leaf_addr) {
+        change_last_leaf(new_node->addr);
+    }
 
     current_node->load(parent);
     //* currentNode 现在为 parent
@@ -149,19 +152,18 @@ bool BPlusTree::split_leaf() {
 bool BPlusTree::split_parent() {
     // 如果当前节点是根节点，那需要新建一个根节点作为分裂后节点的父节点
     if (current_node->addr == root_addr) {
-        auto new_root =
-            std::unique_ptr<BPlusTreeNode>(new BPlusTreeNode(pager));
-        new_root->parent                 = 0;
-        new_root->_is_leaf               = false;
-        new_root->len                    = 0;
-        new_root->addr                   = pager.new_page();
+        auto new_root      = std::make_unique<BPlusTreeNode>(pager);
+        new_root->parent   = 0;
+        new_root->_is_leaf = false;
+        new_root->len      = 0;
+        new_root->addr     = pager.new_page();
         new_root->children_or_value[ 0 ] = current_node->addr;
         current_node->parent             = new_root->addr;
         new_root->dump();
         change_root(new_root->addr);
     }
     auto parent      = current_node->parent;
-    auto new_node    = std::unique_ptr<BPlusTreeNode>(new BPlusTreeNode(pager));
+    auto new_node    = std::make_unique<BPlusTreeNode>(pager);
     new_node->parent = parent;
     new_node->addr   = pager.new_page();
 
@@ -251,22 +253,25 @@ SQLBinaryData BPlusTree::iterator::operator*() {
 }
 
 BPlusTree::iterator &BPlusTree::iterator::operator++() {
-    // 如果当前节点是最后一个节点，则可以一直加到 len，此时迭代器为 end
-    if (current_node->next_leaf == 0) {
-        if (current_record_offset == current_node->len) {
-            return *this;
+    do {
+        // 如果当前节点是最后一个节点，则可以一直加到 len，此时迭代器为 end
+        if (current_node->next_leaf == 0) {
+            if (current_record_offset == current_node->len) {
+                return *this;
+            } else {
+                current_record_offset++;
+            }
         } else {
-            current_record_offset++;
+            // 如果不是最后一个节点，处于最后一个记录时加载下一个节点
+            if (current_record_offset == current_node->len - 1) {
+                current_node->load(current_node->next_leaf);
+                current_record_offset = 0;
+            } else {
+                current_record_offset++;
+            }
         }
-    } else {
-        // 如果不是最后一个节点，处于最后一个记录时加载下一个节点
-        if (current_record_offset == current_node->len - 1) {
-            current_node->load(current_node->next_leaf);
-            current_record_offset = 0;
-        } else {
-            current_record_offset++;
-        }
-    }
+    } while (current_node->children_or_value[ current_record_offset ] ==
+             ULLONG_MAX);
     return *this;
 }
 

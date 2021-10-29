@@ -84,8 +84,8 @@ std::uint64_t Pager::write_index_file(const void *data, std::uint64_t size,
 std::uint64_t Pager::new_page() {
     std::uint64_t addr = 0;
     index_file.seekp(0, index_file.end);
-    addr = index_file.tellp();
-    std::unique_ptr<char> data(new char[ 4096 ]);
+    addr      = index_file.tellp();
+    auto data = std::make_unique<char[]>(4096);
     index_file.write(data.get(), 4096);
     return addr;
 }
