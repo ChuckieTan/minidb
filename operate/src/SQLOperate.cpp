@@ -47,7 +47,11 @@ void SQLOperate::main_loop() {
 bool SQLOperate::create_table_operate() {
     auto statement = parser.parseCreateTableStatement();
     bool ok        = storage.new_table(statement);
-    if (ok) { spdlog::info("create table {} successful", statement.tableName); }
+    if (ok) {
+        spdlog::info("create table {} successful", statement.tableName);
+    } else {
+        spdlog::warn("create table {} failed", statement.tableName);
+    }
     return ok;
 }
 
@@ -56,7 +60,11 @@ bool SQLOperate::insert_operate() {
     auto data      = BinaryOperate::dump(statement.values);
     bool ok        = storage.insert_data(statement.tableName,
                                   statement.values[ 0 ].getIntValue(), data);
-    if (ok) { spdlog::info("insert successful"); }
+    if (ok) {
+        spdlog::info("insert successful");
+    } else {
+        spdlog::warn("insert failed");
+    }
     return ok;
 }
 
@@ -98,6 +106,7 @@ bool SQLOperate::delete_operate() {
     } else {
         spdlog::warn("delete failed");
     }
+    return res;
 }
 
 void SQLOperate::print_expr(const ast::SQLExprValue &v) {

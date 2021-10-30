@@ -323,6 +323,7 @@ SQLBinaryData Storage::search_data(const std::string &table_name,
     } else {
         spdlog::error("doesn't exists table: {}", table_name);
     }
+    return SQLBinaryData(0);
 }
 
 bool Storage::delete_data(const std::string &table_name, std::int64_t key) {
