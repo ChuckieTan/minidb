@@ -8,8 +8,9 @@
 #include "Storage.h"
 #include "TokenType.h"
 #include "spdlog/fmt/bundled/core.h"
-#include <c++/10/bits/c++config.h>
+#include <array>
 #include <cstdint>
+#include <cstring>
 #include <iostream>
 #include <iterator>
 #include <spdlog/spdlog.h>
@@ -48,8 +49,25 @@ int main(int argc, char *argv[]) {
     // }
     // std::cout << str << " " << "success\n";
 
-    operate::SQLOperate operate("student.db");
-    operate.main_loop();
+    const std::array<const std::string, 5> sqls{
+        "create table student (id int, name text);",
+        "select * from student where id = 1;",
+        "insert into student values (1, 'tom');",
+        "update student set id = 1, name = 'tom' where id = 1;",
+        "delete from student where id = 1;",
+    };
+
+    int v[ 1000 ];
+
+    std::memset(v, 0, sizeof(v));
+
+    for (int i = 0; i < 3000000; i++) {
+        v[i%1000] +=
+        minidb::parser::Parser(sqls[i%sqls.size()]).parseStatement();
+    }
+    fmt::print("{}\n", v[ 99 ]);
+    // operate::SQLOperate operate("student.db");
+    // operate.main_loop();
 
     return 0;
 }

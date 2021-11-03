@@ -407,4 +407,26 @@ bool Parser::tree(std::initializer_list<MatchType> args) {
     return false;
 }
 
+int Parser::parseStatement() {
+    int ans = 0;
+    if (auto tokenType = lexer.getCurrentToken().tokenType;
+    tokenType == TokenType::CREATE) {
+        parseCreateTableStatement();
+        ans = 1;
+    } else if (tokenType == TokenType::SELECT) {
+        parseSelectStatement();
+        ans = 2;
+    } else if (tokenType == TokenType::INSERT) {
+        parseInsertIntoStatement();
+        ans = 3;
+    } else if (tokenType == TokenType::UPDATE) {
+        parseUpdateStatement();
+        ans = 4;
+    } else if (tokenType == TokenType::DELETE) {
+        parseDeleteStatement();
+        ans = 5;
+    }
+    return ans;
+}
+
 } // namespace minidb::parser

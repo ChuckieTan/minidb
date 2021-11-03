@@ -53,6 +53,8 @@ public:
     ast::SQLUpdateStatement      parseUpdateStatement();
     ast::SQLDeleteStatement      parseDeleteStatement();
 
+    int parseStatement();
+
     ast::SQLColumnAssign columnAssign();
     std::string          columnName();
     TokenType            comparisonOperator();
