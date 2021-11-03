@@ -16,6 +16,8 @@ ObjCBlockIndentWidth: 4
 AllowShortFunctionsOnASingleLine: true
 # 是否允许短if单行 If true, if (a) return; 可以放到同一行
 AllowShortIfStatementsOnASingleLine: true
+# 允许将简单的语句块放到一个单行
+AllowShortBlocksOnASingleLine: true
 #注释对齐
 AlignTrailingComments: true
 # 连续声明时，对齐所有声明的变量名

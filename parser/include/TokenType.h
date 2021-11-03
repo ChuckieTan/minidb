@@ -1,12 +1,15 @@
 #pragma once
 
-namespace minidb {
+namespace minidb::parser {
 enum class TokenType {
     CREATE,
     TABLE,
     INSERT,
     INTO,
+    VALUES,
     DELETE,
+    UPDATE,
+    SET,
     DROP,
     SELECT,
     FROM,
@@ -42,12 +45,12 @@ enum class TokenType {
     ILLEGAL,          // illegal token
     END,              // end of SQL
 
-    DOT,              // .
-    BETWEEN,          // between
-    DISTINCT,         // distinct
-    DIV,              // /
-    MOD,              // %
-    ASSIGN,           // =
-    ALL,              // all
+    DOT,      // .
+    BETWEEN,  // between
+    DISTINCT, // distinct
+    DIV,      // /
+    MOD,      // %
+    ASSIGN,   // =
+    ALL,      // all
 };
 }

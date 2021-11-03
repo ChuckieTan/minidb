@@ -3,7 +3,7 @@
 #include <any>
 #include <string>
 
-namespace minidb {
+namespace minidb::parser {
 struct Token {
     TokenType   tokenType;
     std::string val;

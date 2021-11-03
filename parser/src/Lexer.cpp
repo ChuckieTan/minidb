@@ -1,14 +1,16 @@
 #include "Lexer.h"
 #include "Token.h"
 #include "TokenType.h"
+#include "spdlog/fmt/bundled/core.h"
 #include <algorithm>
 #include <cctype>
 #include <map>
 #include <string>
+#include <system_error>
 #include <unordered_map>
 #include <vector>
 
-namespace minidb {
+namespace minidb::parser {
 
 std::unordered_map<std::string, TokenType> Lexer::symbolTokenType = {
     { ",", TokenType::COMMA },      { "*", TokenType::STAR },
@@ -42,13 +44,9 @@ Lexer::SavePoint Lexer::mark() {
     return savePoint;
 }
 
-void Lexer::reset(int _tokenPos) {
-    tokenPos = _tokenPos;
-}
+void Lexer::reset(int _tokenPos) { tokenPos = _tokenPos; }
 
-void Lexer::reset(SavePoint savePoint) {
-    tokenPos = savePoint.tokenPos;
-}
+void Lexer::reset(SavePoint savePoint) { tokenPos = savePoint.tokenPos; }
 
 Token Lexer::getSymbolToken() {
     Token token;
@@ -62,11 +60,10 @@ Token Lexer::getSymbolToken() {
         if (sql[ sqlPos ] == '\'') {
             sqlPos++;
             int len = 0;
-            while (!(sql[ sqlPos + len ] == '\'' &&
-                     sql[ sqlPos + len - 1 ] != '\\')) {
+            while (sql[ sqlPos + len ] != '\'') {
                 len++;
             }
-            token = Token(TokenType::STRING, sql.substr(sqlPos, sqlPos + len));
+            token = Token(TokenType::STRING, sql.substr(sqlPos, len));
             sqlPos += len + 1;
         } else {
             token = Token(TokenType::ILLEGAL, sql.substr(sqlPos, 1));
@@ -81,27 +78,18 @@ void Lexer::toLowerCase(std::string &str) {
 }
 
 std::unordered_map<std::string, TokenType> Lexer::keywordTokenType = {
-    { "create", TokenType::CREATE },
-    { "table", TokenType::TABLE },
-    { "insert", TokenType::INSERT },
-    { "into", TokenType::INTO },
-    { "delete", TokenType::DELETE },
-    { "drop", TokenType::DROP },
-    { "select", TokenType::SELECT },
-    { "from", TokenType::FROM },
-    { "where", TokenType::WHERE },
-    { "and", TokenType::AND },
-    { "or", TokenType::OR },
-    { "not", TokenType::NOT },
-    { "in", TokenType::IN },
-    { "is", TokenType::IS },
-    { "null", TokenType::NULL_ },
-    { "if", TokenType::IF },
-    { "exists", TokenType::EXISTS },
-    { "true", TokenType::TRUE },
-    { "false", TokenType::FALSE },
-    { "between", TokenType::BETWEEN },
-    { "distinct", TokenType::DISTINCT },
+    { "create", TokenType::CREATE },   { "table", TokenType::TABLE },
+    { "insert", TokenType::INSERT },   { "into", TokenType::INTO },
+    { "values", TokenType::VALUES },   { "delete", TokenType::DELETE },
+    { "update", TokenType::UPDATE },   { "set", TokenType::SET },
+    { "drop", TokenType::DROP },       { "select", TokenType::SELECT },
+    { "from", TokenType::FROM },       { "where", TokenType::WHERE },
+    { "and", TokenType::AND },         { "or", TokenType::OR },
+    { "not", TokenType::NOT },         { "in", TokenType::IN },
+    { "is", TokenType::IS },           { "null", TokenType::NULL_ },
+    { "if", TokenType::IF },           { "exists", TokenType::EXISTS },
+    { "true", TokenType::TRUE },       { "false", TokenType::FALSE },
+    { "between", TokenType::BETWEEN }, { "distinct", TokenType::DISTINCT },
     { "all", TokenType::ALL }
 };
 
@@ -127,9 +115,7 @@ Token Lexer::getNumberToken() {
     Token token(TokenType::INTEGER, "0");
     int   len = 0, numOfDot = 0;
     while (std::isdigit(sql[ sqlPos + len ]) || sql[ sqlPos + len ] == '.') {
-        if (sql[ sqlPos + len ] == '.') {
-            numOfDot++;
-        }
+        if (sql[ sqlPos + len ] == '.') { numOfDot++; }
         len++;
     }
     if (numOfDot == 0) {
@@ -144,9 +130,7 @@ Token Lexer::getNumberToken() {
 }
 
 Token Lexer::scanNextToken() {
-    if (sqlPos >= sql.size()) {
-        return Token(TokenType::END, "");
-    }
+    if (sqlPos >= sql.size()) { return Token(TokenType::END, ""); }
     // ingore the space
     while (std::isspace(sql[ sqlPos ])) {
         sqlPos++;
@@ -184,4 +168,4 @@ void Lexer::scanTokens() {
         tokenSequence.push_back(scanNextToken());
     } while (tokenSequence.back().tokenType != TokenType::END);
 }
-} // namespace minidb
+} // namespace minidb::parser

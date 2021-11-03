@@ -10,22 +10,25 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
 
 include(spdlog)
 
-# Add sources
-file(GLOB sources
-    "${PROJECT_SOURCE_DIR}/main.cpp"
-    "${PROJECT_SOURCE_DIR}/src/*.cpp"
-)
-
 IF (CMAKE_BUILD_TYPE STREQUAL Debug)
     ADD_DEFINITIONS(-DDEBUG)
 ENDIF()
 
-add_executable(minidb "${sources}")
-target_include_directories(minidb PUBLIC
-    "${PROJECT_SOURCE_DIR}/include"
-)
+add_subdirectory(util)
+add_subdirectory(parser)
+add_subdirectory(ast)
+add_subdirectory(storage)
+add_subdirectory(operate)
+
+add_executable(minidb main.cpp)
+
 target_link_libraries(minidb PRIVATE
     spdlog::spdlog
+    minidb::util
+    minidb::parser
+    minidb::ast
+    minidb::storage
+    minidb::operate
 )
 
 option(PACKAGE_TESTS "Build the tests" ON)
